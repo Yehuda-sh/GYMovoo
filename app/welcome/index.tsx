@@ -16,7 +16,7 @@ export default function WelcomeScreen() {
       {/* לוגו ראשי */}
       <Image
         source={require("./assets/logo.png")}
-        style={globalStyles.logo}
+        style={globalStyles.logo} 
         accessibilityLabel="Gymovo Logo"
       />
 
