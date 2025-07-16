@@ -1,14 +1,21 @@
 /**
- * 📁 Path: /screens/home/HomeScreen.tsx
- * 📝 Description: Main home screen - מסך הבית הראשי
- * 📅 Last Modified: 2024-01-XX 14:30
+ * @file screens/home/HomeScreen.tsx
+ * @description מסך הבית הראשי של האפליקציה
+ * @author GYMoveo Development
+ * @version 1.0.1
  *
- * 🔗 Dependencies:
- * - /lib/stores/userStore
- * - /styles/theme
- * - /screens/home/components
+ * @component HomeScreen
+ * @parent App
  *
- * ⚠️ Note: This is the main screen after login/guest entry
+ * @notes
+ * - מסך ראשי לאחר התחברות/כניסת אורח
+ * - מרכז את כל הקומפוננטות של מסך הבית
+ * - תומך ברענון pull-to-refresh
+ * - תוקן: צבעי gray ו-error
+ *
+ * @changelog
+ * - v1.0.0: Initial screen creation
+ * - v1.0.1: Fixed color references
  */
 
 import { Ionicons } from "@expo/vector-icons";
@@ -40,7 +47,8 @@ import {
 } from "@/screens/home/components";
 import theme from "@/styles/theme";
 
-const { colors, spacing, borderRadius, shadows } = theme;
+const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
+  theme;
 
 const HomeScreen = () => {
   // 🏪 Store hooks
@@ -94,7 +102,7 @@ const HomeScreen = () => {
           userName={user?.name || "משתמש"}
           isGuest={isGuest}
           isDemo={isDemo}
-          onProfilePress={() => router.push("/profile")}
+          onProfilePress={() => router.push("/")} // זמנית - מוביל למסך הבית
         />
 
         {/* 📊 Quick stats */}
@@ -130,7 +138,7 @@ const HomeScreen = () => {
               <Ionicons
                 name="log-out-outline"
                 size={20}
-                color={colors.error[500]}
+                color={colors.status.error[500]}
               />
               <Text style={styles.signOutText}>התנתק</Text>
             </TouchableOpacity>
@@ -144,7 +152,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.gray[50],
+    backgroundColor: colors.light[50],
   },
   scrollView: {
     flex: 1,
@@ -166,13 +174,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.error[200],
+    borderColor: colors.status.error[200],
     ...shadows.sm,
   },
   signOutText: {
-    fontSize: theme.fontSizes.md,
-    fontWeight: theme.fontWeights.medium,
-    color: colors.error[500],
+    fontSize: fontSizes.md,
+    fontWeight: fontWeights.medium,
+    color: colors.status.error[500],
   },
 });
 

@@ -1,16 +1,28 @@
 /**
- * 📁 Path: /screens/home/components/WelcomeHeader.tsx
- * 📝 Description: Welcome header component - קומפוננטת כותרת ברוכים הבאים
- * 📅 Last Modified: 2024-01-XX 14:30
+ * @file screens/home/components/WelcomeHeader.tsx
+ * @description קומפוננטת כותרת ברוכים הבאים למסך הבית
+ * @author GYMoveo Development
+ * @version 1.0.1
  *
- * 🔗 Dependencies:
- * - /styles/theme
+ * @component WelcomeHeader
+ * @parent HomeScreen
+ *
+ * @notes
+ * - מציג ברכה אישית למשתמש
+ * - תמיכה במצב אורח ודמו
+ * - ברכה דינמית לפי שעת היום
+ * - תוקן: החלפת gray לצבעים קיימים
+ *
+ * @changelog
+ * - v1.0.0: Initial component creation
+ * - v1.0.1: Fixed gray color references
  */
 
-import theme from "@/styles/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+import theme from "@/styles/theme";
 
 const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
   theme;
@@ -80,7 +92,7 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: fontSizes.sm,
-    color: colors.gray[600],
+    color: colors.dark[600],
     marginBottom: spacing.xs,
   },
   nameRow: {
@@ -91,7 +103,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: fontSizes.xxl,
     fontWeight: fontWeights.bold,
-    color: colors.gray[900],
+    color: colors.dark[900],
   },
   badge: {
     fontSize: fontSizes.xs,
@@ -107,7 +119,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.gray[100],
+    backgroundColor: colors.light[100],
     justifyContent: "center",
     alignItems: "center",
     ...shadows.sm,
@@ -120,7 +132,7 @@ const styles = StyleSheet.create({
   },
   motivationalText: {
     fontSize: fontSizes.md,
-    color: colors.gray[700],
+    color: colors.dark[700],
     fontWeight: fontWeights.regular,
     lineHeight: 22,
   },

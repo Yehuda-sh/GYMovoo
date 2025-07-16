@@ -1,6 +1,6 @@
 // app/_layout.tsx
-import { useUserStore } from "@/app/lib/stores/userStore";
-import { colors } from "@/app/styles/theme";
+import { useUserStore } from "@/lib/stores/userStore";
+import theme from "@/styles/theme";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
   DarkTheme,
@@ -21,7 +21,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: "(tabs)",
+  initialRouteName: "index",
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -47,7 +47,7 @@ export default function RootLayout() {
         SplashScreen.hideAsync();
       });
     }
-  }, [loaded]);
+  }, [loaded, loadUser]);
 
   if (!loaded) {
     return null;
@@ -58,19 +58,18 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const user = useUserStore((state) => state.user);
 
   // יצירת theme מותאם אישית
   const customDarkTheme = {
     ...DarkTheme,
     colors: {
       ...DarkTheme.colors,
-      primary: colors.primary,
-      background: colors.background,
-      card: colors.surface,
-      text: colors.text,
-      border: colors.border,
-      notification: colors.accent,
+      primary: theme.colors.primary[600],
+      background: theme.colors.dark[900],
+      card: theme.colors.dark[700],
+      text: theme.colors.light[50],
+      border: theme.colors.dark[500],
+      notification: theme.colors.secondary[500],
     },
   };
 
@@ -78,12 +77,12 @@ function RootLayoutNav() {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
-      primary: colors.primary,
-      background: "#ffffff",
-      card: "#f5f5f5",
-      text: "#000000",
-      border: "#e0e0e0",
-      notification: colors.accent,
+      primary: theme.colors.primary[600],
+      background: theme.colors.light[50],
+      card: theme.colors.light[100],
+      text: theme.colors.dark[900],
+      border: theme.colors.light[300],
+      notification: theme.colors.secondary[500],
     },
   };
 
@@ -91,14 +90,13 @@ function RootLayoutNav() {
     <ThemeProvider
       value={colorScheme === "dark" ? customDarkTheme : customLightTheme}
     >
-      <StatusBar style="light" />
+      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/welcome" options={{ headerShown: false }} />
         <Stack.Screen name="home" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="signup" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
       </Stack>
     </ThemeProvider>
   );

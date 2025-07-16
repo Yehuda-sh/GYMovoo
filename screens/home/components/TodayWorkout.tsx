@@ -2,7 +2,7 @@
  * @file screens/home/components/TodayWorkout.tsx
  * @description קומפוננטה להצגת האימון היומי במסך הבית
  * @author GYMoveo Development
- * @version 1.0.0
+ * @version 1.0.1
  *
  * @component TodayWorkout
  * @parent HomeScreen
@@ -11,15 +11,17 @@
  * - מציג אימון מתוכנן להיום או הצעה לאימון חדש
  * - כולל אנימציה בטעינה
  * - תומך במצב אורח ומצב משתמש רשום
+ * - תוקן: שימוש בצבעי status מ-theme, החלפת gray
  *
  * @changelog
  * - v1.0.0: Initial component creation
+ * - v1.0.1: Fixed status colors and React hooks dependencies
  */
 
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -50,8 +52,8 @@ const TodayWorkout = memo(() => {
   // 📊 Local state
   const [loading, setLoading] = useState(true);
   const [todayWorkout, setTodayWorkout] = useState<Workout | null>(null);
-  const fadeAnim = new Animated.Value(0);
-  const scaleAnim = new Animated.Value(0.95);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
   // 🎭 אנימציות
   useEffect(() => {
@@ -68,7 +70,7 @@ const TodayWorkout = memo(() => {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, scaleAnim]);
 
   // 📥 טעינת נתוני אימון
   useEffect(() => {
@@ -113,13 +115,13 @@ const TodayWorkout = memo(() => {
   const handleStartWorkout = () => {
     if (isGuest) {
       // למשתמשי אורח - הפניה להרשמה
-      router.push("/(auth)/signup");
+      router.push("/signup");
     } else if (todayWorkout) {
-      // למשתמשים רשומים - הפניה לאימון
-      router.push(`/workouts/${todayWorkout.id}`);
+      // למשתמשים רשומים - הפניה לאימון (זמנית למסך הבית)
+      router.push("/");
     } else {
-      // אין אימון מתוכנן - הפניה לבחירת אימון
-      router.push("/workouts");
+      // אין אימון מתוכנן - הפניה לבחירת אימון (זמנית למסך הבית)
+      router.push("/");
     }
   };
 
@@ -136,9 +138,9 @@ const TodayWorkout = memo(() => {
   // 🎨 צבע רקע לפי קושי
   const getDifficultyColor = (difficulty: string) => {
     const colorMap = {
-      beginner: colors.success[500],
-      intermediate: colors.warning[500],
-      advanced: colors.error[500],
+      beginner: colors.status.success[500],
+      intermediate: colors.status.warning[500],
+      advanced: colors.status.error[500],
     };
     return colorMap[difficulty as keyof typeof colorMap] || colors.primary[500];
   };
@@ -162,7 +164,7 @@ const TodayWorkout = memo(() => {
           colors={
             todayWorkout
               ? [colors.primary[500], colors.primary[600]]
-              : [colors.gray[700], colors.gray[800]]
+              : [colors.dark[700], colors.dark[800]]
           }
           style={styles.card}
           start={{ x: 0, y: 0 }}

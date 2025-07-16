@@ -2,7 +2,7 @@
  * @file screens/home/components/QuickActions.tsx
  * @description קומפוננטה לפעולות מהירות במסך הבית
  * @author GYMoveo Development
- * @version 1.0.0
+ * @version 1.0.2
  *
  * @component QuickActions
  * @parent HomeScreen
@@ -11,9 +11,12 @@
  * - כפתורי גישה מהירה לפעולות נפוצות
  * - אנימציות לחיצה
  * - תמיכה במצב אורח
+ * - זמנית: כל הנתיבים מובילים למסך הבית
  *
  * @changelog
  * - v1.0.0: Initial component creation
+ * - v1.0.1: Fixed TypeScript errors and router navigation
+ * - v1.0.2: Fixed theme import to use default export
  */
 
 import { Ionicons } from "@expo/vector-icons";
@@ -32,6 +35,7 @@ import {
 
 import { useIsGuest } from "@/lib/stores/userStore";
 import theme from "@/styles/theme";
+
 const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
   theme;
 
@@ -42,7 +46,7 @@ interface QuickAction {
   title: string;
   subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
-  colors: string[];
+  colors: [string, string];
   route: string;
   requiresAuth?: boolean;
 }
@@ -54,7 +58,7 @@ const quickActions: QuickAction[] = [
     subtitle: "התחל אימון",
     icon: "add-circle",
     colors: [colors.primary[500], colors.primary[600]],
-    route: "/workouts/new",
+    route: "/workouts-new",
   },
   {
     id: "my-programs",
@@ -121,7 +125,7 @@ const QuickActionCard = memo(
         delay: index * 50 + 600,
         useNativeDriver: true,
       }).start();
-    }, [index]);
+    }, [index, fadeAnim]);
 
     const handlePressIn = useCallback(() => {
       Animated.spring(scaleAnim, {
@@ -143,9 +147,10 @@ const QuickActionCard = memo(
 
     const handlePress = useCallback(() => {
       if (action.requiresAuth && isGuest) {
-        router.push("/(auth)/signup");
+        router.push("/signup");
       } else {
-        router.push(action.route as any);
+        // זמנית - כל הנתיבים מובילים למסך הבית
+        router.push("/");
       }
     }, [action, isGuest]);
 
@@ -208,7 +213,7 @@ const QuickActions = memo(() => {
       <View style={styles.header}>
         <Text style={styles.title}>גישה מהירה</Text>
         <TouchableOpacity
-          onPress={() => router.push("/more")}
+          onPress={() => router.push("/")}
           style={styles.moreButton}
         >
           <Text style={styles.moreText}>עוד</Text>

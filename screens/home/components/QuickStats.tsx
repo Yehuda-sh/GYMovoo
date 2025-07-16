@@ -2,7 +2,7 @@
  * @file screens/home/components/QuickStats.tsx
  * @description קומפוננטה להצגת סטטיסטיקות מהירות במסך הבית
  * @author GYMoveo Development
- * @version 1.0.0
+ * @version 1.0.1
  *
  * @component QuickStats
  * @parent HomeScreen
@@ -11,9 +11,11 @@
  * - מציג 4 סטטיסטיקות עיקריות
  * - אנימציות ספירה למספרים
  * - תמיכה במצב אורח/דמו
+ * - זמנית: כל הנתיבים מובילים למסך הבית
  *
  * @changelog
  * - v1.0.0: Initial component creation
+ * - v1.0.1: Fixed routing and React hooks dependencies
  */
 
 import { Ionicons } from "@expo/vector-icons";
@@ -69,7 +71,7 @@ const QuickStatCard = memo(
           useNativeDriver: false,
         }),
       ]).start();
-    }, [value]);
+    }, [value, animatedValue, scaleAnim]);
 
     const handlePressIn = () => {
       Animated.spring(scaleAnim, {
@@ -142,7 +144,7 @@ const QuickStats = memo(({ stats }: QuickStatsProps) => {
       delay: 300,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [fadeAnim]);
 
   const statItems: QuickStatProps[] = [
     {
@@ -150,29 +152,29 @@ const QuickStats = memo(({ stats }: QuickStatsProps) => {
       label: "אימונים השבוע",
       value: stats.workoutsThisWeek,
       color: colors.primary[500],
-      onPress: () => router.push("/workouts"),
+      onPress: () => router.push("/"), // זמנית - מוביל למסך הבית
     },
     {
       icon: "flame",
       label: "רצף נוכחי",
       value: stats.currentStreak,
       unit: "ימים",
-      color: colors.status.error,
-      onPress: () => router.push("/progress"),
+      color: colors.status.error[500],
+      onPress: () => router.push("/"), // זמנית - מוביל למסך הבית
     },
     {
       icon: "time",
       label: "דקות החודש",
       value: stats.minutesThisMonth,
-      color: colors.status.success,
-      onPress: () => router.push("/progress"),
+      color: colors.status.success[500],
+      onPress: () => router.push("/"), // זמנית - מוביל למסך הבית
     },
     {
       icon: "trophy",
       label: "שיאים אישיים",
       value: stats.personalRecords,
-      color: colors.status.warning,
-      onPress: () => router.push("/progress"),
+      color: colors.status.warning[500],
+      onPress: () => router.push("/"), // זמנית - מוביל למסך הבית
     },
   ];
 
@@ -181,7 +183,7 @@ const QuickStats = memo(({ stats }: QuickStatsProps) => {
       <View style={styles.header}>
         <Text style={styles.title}>הסטטיסטיקות שלך</Text>
         <TouchableOpacity
-          onPress={() => router.push("/progress")}
+          onPress={() => router.push("/")} // זמנית - מוביל למסך הבית
           style={styles.viewAllButton}
         >
           <Text style={styles.viewAllText}>הצג הכל</Text>

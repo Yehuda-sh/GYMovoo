@@ -2,7 +2,7 @@
  * @file screens/welcome/WelcomeScreen.tsx
  * @description מסך הפתיחה הראשי של האפליקציה
  * @author GYMoveo Development
- * @version 1.0.0
+ * @version 1.0.1
  *
  * @component WelcomeScreen
  * @parent App root
@@ -15,6 +15,7 @@
  *
  * @changelog
  * - v1.0.0: Initial creation with improved structure
+ * - v1.0.1: Fixed imports and TypeScript errors
  */
 
 import { router } from "expo-router";
@@ -30,7 +31,7 @@ import {
   View,
 } from "react-native";
 
-import { demoUsers } from "@/constants/demoUsers";
+import { DEMO_USERS } from "@/constants/demoUsers";
 import { clearAllData } from "@/lib/data/storage";
 import { useUserStore } from "@/lib/stores/userStore";
 import { supabase } from "@/lib/supabase";
@@ -71,27 +72,36 @@ export default function WelcomeScreen() {
   const [devClickCount, setDevClickCount] = useState(0);
 
   // 🎨 Animations
-  const { fadeAnim, slideAnim, scaleAnim, startAnimations } =
+  const { fadeAnim, logoScale, titleSlide, subtitleSlide, buttonsSlide } =
     useWelcomeAnimations();
 
   // 📱 Refs
-  const devTimerRef = useRef<NodeJS.Timeout>();
+  const devTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 🏁 Initialize animations
   React.useEffect(() => {
-    startAnimations();
+    // Animations start automatically
     return () => {
       if (devTimerRef.current) {
         clearTimeout(devTimerRef.current);
       }
     };
-  }, [startAnimations]);
+  }, []);
 
   // 👤 Handle guest login
   const handleGuestLogin = useCallback(() => {
     setIsLoading(true);
     setTimeout(() => {
-      setUser(null);
+      // Set guest user as null with isGuest flag handled in store
+      setUser({
+        id: `guest-${Date.now()}`,
+        email: "guest@gymovoo.com",
+        name: "אורח",
+        role: "user",
+        isGuest: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
       router.replace("/home");
     }, 800);
   }, [setUser]);
@@ -99,7 +109,7 @@ export default function WelcomeScreen() {
   // 🔑 Handle demo user login
   const handleDemoUserLogin = useCallback(
     (demoUserId: string) => {
-      const demoUser = demoUsers.find((u) => u.id === demoUserId);
+      const demoUser = DEMO_USERS.find((u) => u.email === demoUserId);
       if (!demoUser) return;
 
       setIsLoading(true);
@@ -147,14 +157,47 @@ export default function WelcomeScreen() {
     }
   }, []);
 
+  // Navigation handlers
+  const handleSignup = useCallback(() => {
+    router.push("/signup");
+  }, []);
+
+  const handleLogin = useCallback(() => {
+    router.push("/login");
+  }, []);
+
+  const handleGoogleLogin = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      // Google login implementation
+      Alert.alert("בקרוב", "התחברות עם Google תהיה זמינה בקרוב");
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Google login error:", error);
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleAppleLogin = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      // Apple login implementation
+      Alert.alert("בקרוב", "התחברות עם Apple תהיה זמינה בקרוב");
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Apple login error:", error);
+      setIsLoading(false);
+    }
+  }, []);
+
   // Convert demo users for the panel
-  const demoUsersForPanel: DemoUserForPanel[] = demoUsers.map((user) => ({
-    id: user.id,
+  const demoUsersForPanel: DemoUserForPanel[] = DEMO_USERS.map((user) => ({
+    id: user.email,
     name: user.name,
     email: user.email,
     avatar: user.avatar,
     level: user.level,
-    goal: user.fitnessGoal,
+    goal: user.stats ? String(user.stats.workoutsCompleted) : "0",
     isDemo: true,
   }));
 
@@ -171,21 +214,36 @@ export default function WelcomeScreen() {
           styles.content,
           {
             opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
+            transform: [{ translateY: titleSlide }],
           },
         ]}
       >
         {/* 🏆 Hero section */}
-        <HeroSection onLogoPress={handleLogoPress} scaleAnim={scaleAnim} />
+        <HeroSection
+          onLogoPress={handleLogoPress}
+          fadeAnim={fadeAnim}
+          logoScale={logoScale}
+          titleSlide={titleSlide}
+          subtitleSlide={subtitleSlide}
+        />
 
         {/* 🎬 Action buttons */}
-        <ActionButtons />
+        <ActionButtons
+          onSignup={handleSignup}
+          onLogin={handleLogin}
+          buttonsSlide={buttonsSlide}
+          fadeAnim={fadeAnim}
+        />
 
         {/* 🌐 Social login */}
-        <SocialLoginButtons />
+        <SocialLoginButtons
+          onGoogleLogin={handleGoogleLogin}
+          onAppleLogin={handleAppleLogin}
+          fadeAnim={fadeAnim}
+        />
 
         {/* 👤 Guest button */}
-        <GuestButton onPress={handleGuestLogin} isLoading={isLoading} />
+        <GuestButton onGuestLogin={handleGuestLogin} loading={isLoading} />
       </Animated.View>
 
       {/* 🛠️ Dev mode modal */}
@@ -203,7 +261,7 @@ export default function WelcomeScreen() {
                 {
                   transform: [
                     {
-                      scale: scaleAnim.interpolate({
+                      scale: logoScale.interpolate({
                         inputRange: [0, 1],
                         outputRange: [0.8, 1],
                       }),

@@ -2,7 +2,7 @@
  * @file screens/home/components/RecentActivity.tsx
  * @description קומפוננטה להצגת הפעילות האחרונה של המשתמש
  * @author GYMoveo Development
- * @version 1.0.0
+ * @version 1.0.1
  *
  * @component RecentActivity
  * @parent HomeScreen
@@ -11,15 +11,17 @@
  * - מציג רשימת אימונים אחרונים
  * - כולל גרף התקדמות שבועי
  * - תומך במצב אורח (הצגת דמו)
+ * - תוקן: החלפת gray ל-dark/light, תיקון routing
  *
  * @changelog
  * - v1.0.0: Initial component creation
+ * - v1.0.1: Fixed color references and routing
  */
 
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -59,8 +61,8 @@ const RecentActivity = memo(() => {
   // 📊 Local state
   const [activities, setActivities] = useState<Activity[]>([]);
   const [weeklyData, setWeeklyData] = useState<WeeklyData[]>([]);
-  const fadeAnim = new Animated.Value(0);
-  const slideAnim = new Animated.Value(50);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
 
   // 🎭 אנימציות
   useEffect(() => {
@@ -79,7 +81,7 @@ const RecentActivity = memo(() => {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim]);
 
   // 📥 טעינת נתונים
   useEffect(() => {
@@ -177,7 +179,7 @@ const RecentActivity = memo(() => {
       <View style={styles.header}>
         <Text style={styles.title}>פעילות אחרונה</Text>
         <TouchableOpacity
-          onPress={() => router.push("/progress")}
+          onPress={() => router.push("/")} // זמנית - מוביל למסך הבית
           style={styles.viewAllButton}
         >
           <Text style={styles.viewAllText}>הצג הכל</Text>
@@ -202,7 +204,9 @@ const RecentActivity = memo(() => {
                     {
                       height: getBarHeight(data.value),
                       backgroundColor:
-                        data.value > 0 ? colors.primary[500] : colors.gray[300],
+                        data.value > 0
+                          ? colors.primary[500]
+                          : colors.light[300],
                     },
                   ]}
                 />
@@ -217,7 +221,7 @@ const RecentActivity = memo(() => {
       {isGuest ? (
         <TouchableOpacity
           style={styles.guestPrompt}
-          onPress={() => router.push("/(auth)/signup")}
+          onPress={() => router.push("/signup")} // זמנית - מוביל להרשמה
         >
           <LinearGradient
             colors={[colors.primary[50], colors.primary[100]]}
@@ -244,7 +248,7 @@ const RecentActivity = memo(() => {
             <TouchableOpacity
               key={activity.id}
               style={styles.activityCard}
-              onPress={() => router.push(`/workouts/history/${activity.id}`)}
+              onPress={() => router.push("/")} // זמנית - מוביל למסך הבית
               activeOpacity={0.8}
             >
               <View style={styles.activityIcon}>
@@ -268,7 +272,7 @@ const RecentActivity = memo(() => {
                     <Ionicons
                       name="time-outline"
                       size={14}
-                      color={colors.gray[600]}
+                      color={colors.dark[600]}
                     />
                     <Text style={styles.statValue}>
                       {activity.duration}ד&apos;
@@ -278,7 +282,7 @@ const RecentActivity = memo(() => {
                     <Ionicons
                       name="flame-outline"
                       size={14}
-                      color={colors.gray[600]}
+                      color={colors.dark[600]}
                     />
                     <Text style={styles.statValue}>{activity.calories}</Text>
                   </View>
@@ -292,7 +296,7 @@ const RecentActivity = memo(() => {
               <Text style={styles.emptyText}>עדיין אין פעילויות</Text>
               <TouchableOpacity
                 style={styles.startButton}
-                onPress={() => router.push("/workouts")}
+                onPress={() => router.push("/")} // זמנית - מוביל למסך הבית
               >
                 <Text style={styles.startButtonText}>התחל להתאמן</Text>
               </TouchableOpacity>
@@ -320,7 +324,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSizes.xl,
     fontWeight: fontWeights.bold,
-    color: colors.gray[900],
+    color: colors.dark[900],
   },
   viewAllButton: {
     flexDirection: "row",
@@ -334,7 +338,7 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     marginHorizontal: spacing.lg,
-    backgroundColor: colors.gray[50],
+    backgroundColor: colors.light[50],
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.lg,
@@ -342,7 +346,7 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: fontSizes.sm,
     fontWeight: fontWeights.medium,
-    color: colors.gray[700],
+    color: colors.dark[700],
     marginBottom: spacing.md,
   },
   chart: {
@@ -367,7 +371,7 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     fontSize: fontSizes.xs,
-    color: colors.gray[600],
+    color: colors.dark[600],
     fontWeight: fontWeights.medium,
   },
   guestPrompt: {
@@ -416,12 +420,12 @@ const styles = StyleSheet.create({
   activityName: {
     fontSize: fontSizes.md,
     fontWeight: fontWeights.semiBold,
-    color: colors.gray[900],
+    color: colors.dark[900],
     marginBottom: spacing.xs,
   },
   activityDate: {
     fontSize: fontSizes.xs,
-    color: colors.gray[500],
+    color: colors.dark[500],
     marginBottom: spacing.sm,
   },
   activityStats: {
@@ -432,14 +436,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-    backgroundColor: colors.gray[100],
+    backgroundColor: colors.light[100],
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.sm,
   },
   statValue: {
     fontSize: fontSizes.xs,
-    color: colors.gray[700],
+    color: colors.dark[700],
     fontWeight: fontWeights.medium,
   },
   emptyState: {
@@ -450,7 +454,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: fontSizes.md,
-    color: colors.gray[500],
+    color: colors.dark[500],
     marginBottom: spacing.md,
   },
   startButton: {
