@@ -7,16 +7,13 @@
  * - /styles/theme
  */
 
-import {
-  borderRadius,
-  colors,
-  shadows,
-  spacing,
-  typography,
-} from "@/styles/theme";
+import theme from "@/styles/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
+  theme;
 
 interface WelcomeHeaderProps {
   userName: string;
@@ -57,16 +54,14 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
           activeOpacity={0.7}
         >
           <View style={styles.profileIconContainer}>
-            <Ionicons name="person" size={24} color={colors.primary} />
+            <Ionicons name="person" size={24} color={colors.primary[500]} />
           </View>
         </TouchableOpacity>
       </View>
 
       {/* Motivational message */}
       <Text style={styles.motivationalText}>
-        {isGuest
-          ? "התחל את המסע שלך לכושר מושלם! 💪"
-          : "בוא נעשה את זה! היום יום מצוין לאימון 🔥"}
+        {isGuest ? "התחל את המסע שלך לכושר מושלם! 💪" : "בוא נעשה את זה! 🔥"}
       </Text>
     </View>
   );
@@ -74,18 +69,18 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xl,
+    padding: spacing.lg,
+    paddingTop: spacing.xl,
   },
   content: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
     marginBottom: spacing.md,
   },
   greeting: {
-    fontSize: typography.fontSize.lg,
-    color: colors.textSecondary,
+    fontSize: fontSizes.sm,
+    color: colors.gray[600],
     marginBottom: spacing.xs,
   },
   nameRow: {
@@ -94,36 +89,40 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   userName: {
-    fontSize: typography.fontSize.xxl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.text,
+    fontSize: fontSizes.xxl,
+    fontWeight: fontWeights.bold,
+    color: colors.gray[900],
   },
   badge: {
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.primary,
-    backgroundColor: colors.surfaceLight,
+    fontSize: fontSizes.xs,
+    fontWeight: fontWeights.medium,
+    color: colors.light[50],
+    backgroundColor: colors.primary[500],
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs / 2,
-    borderRadius: borderRadius.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.md,
     overflow: "hidden",
   },
   profileButton: {
-    padding: spacing.xs,
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.gray[100],
+    justifyContent: "center",
+    alignItems: "center",
+    ...shadows.sm,
   },
   profileIconContainer: {
     width: 48,
     height: 48,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surface,
-    alignItems: "center",
     justifyContent: "center",
-    ...shadows.sm,
+    alignItems: "center",
   },
   motivationalText: {
-    fontSize: typography.fontSize.md,
-    color: colors.textSecondary,
-    lineHeight: typography.fontSize.md * typography.lineHeight.relaxed,
+    fontSize: fontSizes.md,
+    color: colors.gray[700],
+    fontWeight: fontWeights.regular,
+    lineHeight: 22,
   },
 });
 
