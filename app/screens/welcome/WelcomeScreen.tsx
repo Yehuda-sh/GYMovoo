@@ -1,4 +1,4 @@
-// screens/welcome/WelcomeScreen.tsx
+// app/screens/welcome/WelcomeScreen.tsx
 import { demoUsers } from "@/app/constants/demoUsers";
 import { clearAllData } from "@/app/lib/data/storage";
 import { useUserStore } from "@/app/lib/stores/userStore";
@@ -117,7 +117,7 @@ const WelcomeScreen = () => {
     setTimeout(() => {
       becomeGuest();
       setLoading(false);
-      router.replace("/(tabs)");
+      router.replace("/home" as any);
     }, 300);
   }, [becomeGuest]);
 
@@ -129,9 +129,9 @@ const WelcomeScreen = () => {
 
       try {
         await loginAsDemoUser(demoUser);
-        router.replace("/(tabs)");
-      } catch (err) {
-        Alert.alert("שגיאה", "לא ניתן להתחבר כמשתמש דמו");
+        router.replace("/home" as any);
+      } catch (err: any) {
+        Alert.alert("שגיאה", err.message || "לא ניתן להתחבר כמשתמש דמו");
       } finally {
         setLoading(false);
       }
@@ -150,8 +150,8 @@ const WelcomeScreen = () => {
           try {
             await clearAllData();
             Alert.alert("✅", "כל הנתונים אופסו בהצלחה");
-          } catch (err) {
-            Alert.alert("שגיאה", "לא ניתן לאפס נתונים");
+          } catch (err: any) {
+            Alert.alert("שגיאה", err.message || "לא ניתן לאפס נתונים");
           }
         },
       },
@@ -160,12 +160,12 @@ const WelcomeScreen = () => {
 
   // 🔑 התחברות רגילה - עם expo-router
   const handleLogin = useCallback(() => {
-    router.push("/login");
+    router.push("/login" as any);
   }, []);
 
   // 📝 הרשמה - עם expo-router
   const handleSignup = useCallback(() => {
-    router.push("/register");
+    router.push("/signup" as any);
   }, []);
 
   // 🔐 Google Login עם Supabase
