@@ -1,5 +1,5 @@
-// screens/welcome/components/BackgroundGradient.tsx
-import { colors } from "@/styles/theme";
+// app/screens/welcome/components/BackgroundGradient.tsx
+import { colors } from "@/app/styles/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { StyleSheet } from "react-native";

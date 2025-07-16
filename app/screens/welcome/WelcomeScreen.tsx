@@ -1,9 +1,9 @@
 // screens/welcome/WelcomeScreen.tsx
-import { demoUsers } from "@/constants/demoUsers";
-import { clearAllData } from "@/lib/data/storage";
-import { useUserStore } from "@/lib/stores/userStore";
-import { supabase } from "@/lib/supabase";
-import { User } from "@/lib/types/user";
+import { demoUsers } from "@/app/constants/demoUsers";
+import { clearAllData } from "@/app/lib/data/storage";
+import { useUserStore } from "@/app/lib/stores/userStore";
+import { supabase } from "@/app/lib/supabase";
+import { User } from "@/app/lib/types/user";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useRef, useState } from "react";
