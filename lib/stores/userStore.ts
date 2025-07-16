@@ -1,391 +1,321 @@
 /**
  * 📁 Path: /lib/stores/userStore.ts
- * 📝 Description: מאגר מצב משתמש - User state store (Zustand)
- * 🔢 Version: 1.0
+ * 📝 Description: Global user state management - ניהול מצב משתמש גלובלי
+ * 📅 Last Modified: 2024-01-XX 14:30
  *
  * 🔗 Dependencies:
  * - zustand
- * - @/lib/supabase
- * - @/lib/types/user
- * - @/constants/demoUsers
+ * - @react-native-async-storage/async-storage
+ * - /lib/supabase
+ * - /lib/types/user
+ * - /constants/supabase
  *
- * ⚠️ Central user state management
+ * ⚠️ Note: This store manages both authenticated and guest users
  */
 
+import { auth, db } from "@/lib/supabase";
+import { User, createDemoUser, createGuestUser } from "@/lib/types/user";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
-import { DEMO_USERS } from "../../constants/demoUsers"; // Changed path
-import { auth, db, supabase } from "../supabase"; // Changed from '@/lib/supabase'
-import type {
-  AuthState,
-  LoginCredentials,
-  SignupData,
-  User,
-} from "../types/user"; // Changed path
 
-// 🏪 User store interface - ממשק מאגר המשתמש
-interface UserStore extends AuthState {
+// 🏪 User store interface - ממשק חנות המשתמש
+interface UserStore {
+  // State
+  user: User | null;
+  profile: any | null;
+  isLoading: boolean;
+  error: string | null;
+  isAuthenticated: boolean;
+
   // Actions - פעולות
-  login: (credentials: LoginCredentials) => Promise<void>;
-  signup: (data: SignupData) => Promise<void>;
-  logout: () => Promise<void>;
-  loginAsDemo: (
-    level: "beginner" | "intermediate" | "advanced"
-  ) => Promise<void>;
-  loginAsGuest: () => void;
-  updateProfile: (updates: Partial<User>) => Promise<void>;
-  refreshUser: () => Promise<void>;
-  clearError: () => void;
+  setUser: (user: User) => void;
+  clearUser: () => void;
+  becomeGuest: () => void;
+  loginAsDemoUser: (demoUser: any) => Promise<void>;
+  updateUser: (updates: Partial<User>) => void;
+  loadUser: () => Promise<void>;
 
-  // Helpers - עזרים
-  isDemo: boolean;
-  isGuest: boolean;
+  // Supabase specific - פעולות ספציפיות לSupabase
+  fetchProfile: (userId: string) => Promise<void>;
+  updateProfile: (updates: any) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signOut: () => Promise<void>;
+
+  // Helpers
+  checkAuthStatus: () => Promise<boolean>;
+  syncWithSupabase: () => Promise<void>;
 }
 
-// 🛠️ Create user store - יצירת מאגר המשתמש
-export const useUserStore = create<UserStore>()(
-  persist(
-    (set, get) => ({
-      // Initial state - מצב התחלתי
-      user: null,
-      isAuthenticated: false,
-      isLoading: true,
+// 🔑 Storage key - מפתח אחסון
+const STORAGE_KEY = "@gymovo_user";
+
+// 🏪 Create store - יצירת החנות
+export const useUserStore = create<UserStore>((set, get) => ({
+  // 🔄 Initial state - מצב התחלתי
+  user: null,
+  profile: null,
+  isLoading: false,
+  error: null,
+  isAuthenticated: false,
+
+  // 👤 Set user - הגדרת משתמש
+  setUser: (user) => {
+    set({
+      user,
       error: null,
-      isDemo: false,
-      isGuest: false,
+      isAuthenticated: true,
+    });
 
-      // 🔐 Login - התחברות
-      login: async (credentials: LoginCredentials) => {
-        set({ isLoading: true, error: null });
+    // 💾 שמירה באחסון מקומי - Save to local storage
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(user)).catch(
+      console.error
+    );
+  },
 
-        try {
-          const { data, error } = await auth.signIn(
-            credentials.email,
-            credentials.password
-          );
+  // 🗑️ Clear user - ניקוי משתמש
+  clearUser: () => {
+    set({
+      user: null,
+      profile: null,
+      error: null,
+      isAuthenticated: false,
+    });
 
-          if (error) throw error;
+    // 🧹 ניקוי אחסון - Clear storage
+    AsyncStorage.removeItem(STORAGE_KEY).catch(console.error);
+  },
 
-          if (data.user) {
-            // Load full user data - טעינת נתוני משתמש מלאים
-            const { data: profile } = await db.profiles.get(data.user.id);
-            const { data: preferences } = await db.preferences.get(
-              data.user.id
-            );
-            const { data: stats } = await db.stats.get(data.user.id);
+  // 🏃 Become guest - הפוך לאורח
+  becomeGuest: () => {
+    const guestUser = createGuestUser();
+    get().setUser(guestUser);
+  },
 
-            const user: User = {
-              id: data.user.id,
-              email: data.user.email!,
-              profile: profile || null,
-              preferences: preferences || null,
-              stats: stats || null,
-              isDemo: false,
-            };
+  // 🎮 Login as demo user - התחבר כמשתמש דמו
+  loginAsDemoUser: async (demoData) => {
+    set({ isLoading: true, error: null });
 
-            set({
-              user,
-              isAuthenticated: true,
-              isLoading: false,
-              isDemo: false,
-              isGuest: false,
-            });
-          }
-        } catch (error: any) {
-          console.error("Login error:", error);
-          set({
-            error: error.message || "שגיאה בהתחברות",
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
+    try {
+      // ⏱️ סימולציה של התחברות - Simulate login delay
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // 📝 Signup - הרשמה
-      signup: async (data: SignupData) => {
-        set({ isLoading: true, error: null });
+      // 👤 יצירת משתמש דמו - Create demo user
+      const demoUser = createDemoUser(demoData);
 
-        try {
-          const { data: authData, error } = await auth.signUp(
-            data.email,
-            data.password,
-            data.fullName
-          );
+      get().setUser(demoUser);
+    } catch (error: any) {
+      set({ error: error.message || "שגיאה בהתחברות כמשתמש דמו" });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
-          if (error) throw error;
+  // 🔄 Update user - עדכון משתמש
+  updateUser: (updates) => {
+    const currentUser = get().user;
+    if (!currentUser) return;
 
-          if (authData.user) {
-            set({
-              isLoading: false,
-              error: null,
-            });
+    const updatedUser = {
+      ...currentUser,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
 
-            // Note: User needs to verify email before logging in
-            // הערה: המשתמש צריך לאמת אימייל לפני כניסה
-          }
-        } catch (error: any) {
-          console.error("Signup error:", error);
-          set({
-            error: error.message || "שגיאה בהרשמה",
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
+    get().setUser(updatedUser);
+  },
 
-      // 🚪 Logout - התנתקות
-      logout: async () => {
-        set({ isLoading: true });
+  // 📥 Load user - טעינת משתמש
+  loadUser: async () => {
+    set({ isLoading: true });
 
-        try {
-          const { error } = await auth.signOut();
-          if (error) throw error;
+    try {
+      // 🔐 בדיקה אם יש משתמש מחובר ב-Supabase
+      const session = await auth.getSession();
 
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            isDemo: false,
-            isGuest: false,
-            error: null,
-          });
-        } catch (error: any) {
-          console.error("Logout error:", error);
-          set({
-            error: error.message || "שגיאה בהתנתקות",
-            isLoading: false,
-          });
-        }
-      },
+      if (session?.user) {
+        // 📊 טעינת פרופיל מ-Supabase
+        const profile = await db.profiles.get(session.user.id);
 
-      // 🎭 Login as demo user - כניסה כמשתמש דמו
-      loginAsDemo: async (level: "beginner" | "intermediate" | "advanced") => {
-        set({ isLoading: true, error: null });
-
-        try {
-          const demoUser = DEMO_USERS.find((u) => u.level === level);
-          if (!demoUser) throw new Error("Demo user not found");
-
-          // Create demo user object - יצירת אובייקט משתמש דמו
+        if (profile) {
           const user: User = {
-            id: `demo-${level}`,
-            email: demoUser.email,
-            profile: {
-              id: `demo-${level}`,
-              email: demoUser.email,
-              full_name: demoUser.name,
-              avatar_url: null,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              is_demo_user: true,
-            },
-            preferences: {
-              id: `demo-${level}`,
-              user_id: `demo-${level}`,
-              language: "he",
-              units: "metric",
-              theme: "dark",
-              notifications_enabled: true,
-              workout_reminders: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            },
-            stats: {
-              id: `demo-${level}`,
-              user_id: `demo-${level}`,
-              total_workouts: demoUser.stats.workoutsCompleted,
-              total_minutes: demoUser.stats.totalMinutes,
-              current_streak: demoUser.stats.currentStreak,
-              longest_streak: demoUser.stats.currentStreak,
-              last_workout_date: null,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            },
-            isDemo: true,
+            id: session.user.id,
+            email: session.user.email || "",
+            name: profile.name || profile.full_name || "משתמש",
+            avatarUrl: profile.avatar_url,
+            role: profile.role || "user",
+            createdAt: profile.created_at,
+            updatedAt: profile.updated_at,
           };
 
           set({
             user,
+            profile,
             isAuthenticated: true,
-            isLoading: false,
-            isDemo: true,
-            isGuest: false,
-          });
-        } catch (error: any) {
-          console.error("Demo login error:", error);
-          set({
-            error: error.message || "שגיאה בכניסה כמשתמש דמו",
-            isLoading: false,
           });
         }
-      },
+      } else {
+        // 💾 נסה לטעון מהאחסון המקומי - Try loading from local storage
+        const savedUser = await AsyncStorage.getItem(STORAGE_KEY);
+        if (savedUser) {
+          const user = JSON.parse(savedUser);
+          set({
+            user,
+            isAuthenticated: true,
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error("Error loading user:", error);
+      set({ error: "שגיאה בטעינת משתמש" });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
-      // 👤 Login as guest - כניסה כאורח
-      loginAsGuest: () => {
-        const guestUser: User = {
-          id: "guest",
-          email: "guest@gymapp.com",
-          profile: {
-            id: "guest",
-            email: "guest@gymapp.com",
-            full_name: "אורח",
-            avatar_url: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            is_demo_user: true,
-          },
-          preferences: {
-            id: "guest",
-            user_id: "guest",
-            language: "he",
-            units: "metric",
-            theme: "dark",
-            notifications_enabled: false,
-            workout_reminders: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          stats: {
-            id: "guest",
-            user_id: "guest",
-            total_workouts: 0,
-            total_minutes: 0,
-            current_streak: 0,
-            longest_streak: 0,
-            last_workout_date: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          isDemo: true,
+  // 📊 Fetch profile - טעינת פרופיל
+  fetchProfile: async (userId: string) => {
+    try {
+      const profile = await db.profiles.get(userId);
+      set({ profile });
+    } catch (error: any) {
+      console.error("Error fetching profile:", error);
+      set({ error: "שגיאה בטעינת פרופיל" });
+    }
+  },
+
+  // 🔄 Update profile - עדכון פרופיל
+  updateProfile: async (updates: any) => {
+    const user = get().user;
+    if (!user || user.isGuest || user.isDemo) {
+      set({ error: "לא ניתן לעדכן פרופיל של אורח או משתמש דמו" });
+      return;
+    }
+
+    try {
+      const updatedProfile = await db.profiles.update(user.id, updates);
+      set({ profile: updatedProfile });
+
+      // 🔄 עדכון גם את המידע המקומי - Update local info too
+      get().updateUser({
+        name: updatedProfile.name || updatedProfile.full_name,
+      });
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      set({ error: "שגיאה בעדכון פרופיל" });
+      throw error;
+    }
+  },
+
+  // 🔐 Sign in - התחברות
+  signIn: async (email: string, password: string) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const authData = await auth.signIn(email, password);
+
+      if (authData.user) {
+        // 📊 טעינת פרופיל - Load profile
+        const profile = await db.profiles.get(authData.user.id);
+
+        const user: User = {
+          id: authData.user.id,
+          email: authData.user.email!,
+          name: profile?.name || profile?.full_name || "משתמש",
+          avatarUrl: profile?.avatar_url,
+          role: profile?.role || "user",
+          createdAt: profile?.created_at || new Date().toISOString(),
+          updatedAt: profile?.updated_at || new Date().toISOString(),
         };
 
-        set({
-          user: guestUser,
-          isAuthenticated: true,
-          isDemo: false,
-          isGuest: true,
-          isLoading: false,
-          error: null,
-        });
-      },
-
-      // 🔄 Update profile - עדכון פרופיל
-      updateProfile: async (updates: Partial<User>) => {
-        const currentUser = get().user;
-        if (!currentUser || get().isDemo || get().isGuest) return;
-
-        set({ isLoading: true, error: null });
-
-        try {
-          if (updates.profile) {
-            await db.profiles.update(currentUser.id, updates.profile);
-          }
-
-          if (updates.preferences) {
-            await db.preferences.update(currentUser.id, updates.preferences);
-          }
-
-          // Update local state - עדכון מצב מקומי
-          set({
-            user: {
-              ...currentUser,
-              ...updates,
-              profile: updates.profile
-                ? { ...currentUser.profile, ...updates.profile }
-                : currentUser.profile,
-              preferences: updates.preferences
-                ? { ...currentUser.preferences, ...updates.preferences }
-                : currentUser.preferences,
-            },
-            isLoading: false,
-          });
-        } catch (error: any) {
-          console.error("Update profile error:", error);
-          set({
-            error: error.message || "שגיאה בעדכון פרופיל",
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
-
-      // 🔄 Refresh user data - רענון נתוני משתמש
-      refreshUser: async () => {
-        const currentUser = get().user;
-        if (!currentUser || get().isDemo || get().isGuest) return;
-
-        set({ isLoading: true });
-
-        try {
-          const { data: profile } = await db.profiles.get(currentUser.id);
-          const { data: preferences } = await db.preferences.get(
-            currentUser.id
-          );
-          const { data: stats } = await db.stats.get(currentUser.id);
-
-          set({
-            user: {
-              ...currentUser,
-              profile: profile || currentUser.profile,
-              preferences: preferences || currentUser.preferences,
-              stats: stats || currentUser.stats,
-            },
-            isLoading: false,
-          });
-        } catch (error: any) {
-          console.error("Refresh user error:", error);
-          set({
-            error: error.message || "שגיאה ברענון נתונים",
-            isLoading: false,
-          });
-        }
-      },
-
-      // 🧹 Clear error - ניקוי שגיאה
-      clearError: () => {
-        set({ error: null });
-      },
-    }),
-    {
-      name: "gym-user-storage",
-      storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-        isDemo: state.isDemo,
-        isGuest: state.isGuest,
-      }),
+        get().setUser(user);
+        set({ profile });
+      }
+    } catch (error: any) {
+      console.error("Sign in error:", error);
+      set({ error: error.message || "שגיאה בהתחברות" });
+      throw error;
+    } finally {
+      set({ isLoading: false });
     }
-  )
-);
+  },
 
-// 🔍 Selectors - סלקטורים
+  // 📝 Sign up - הרשמה
+  signUp: async (email: string, password: string, name: string) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const authData = await auth.signUp(email, password, { name });
+
+      if (authData.user) {
+        // 👤 יצירת פרופיל בסיסי - Create basic profile
+        const user: User = {
+          id: authData.user.id,
+          email: authData.user.email!,
+          name: name,
+          role: "user",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        get().setUser(user);
+      }
+    } catch (error: any) {
+      console.error("Sign up error:", error);
+      set({ error: error.message || "שגיאה בהרשמה" });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  // 🚪 Sign out - התנתקות
+  signOut: async () => {
+    set({ isLoading: true });
+
+    try {
+      await auth.signOut();
+      get().clearUser();
+    } catch (error: any) {
+      console.error("Sign out error:", error);
+      set({ error: "שגיאה בהתנתקות" });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  // 🔍 Check auth status - בדיקת מצב אימות
+  checkAuthStatus: async () => {
+    try {
+      const session = await auth.getSession();
+      const isAuthenticated = !!session?.user;
+      set({ isAuthenticated });
+      return isAuthenticated;
+    } catch (error) {
+      return false;
+    }
+  },
+
+  // 🔄 Sync with Supabase - סנכרון עם Supabase
+  syncWithSupabase: async () => {
+    const user = get().user;
+    if (!user || user.isGuest || user.isDemo) return;
+
+    try {
+      await get().fetchProfile(user.id);
+    } catch (error) {
+      console.error("Sync error:", error);
+    }
+  },
+}));
+
+// 🎣 Hooks for common selectors - הוקים לבוררים נפוצים
 export const useUser = () => useUserStore((state) => state.user);
 export const useIsAuthenticated = () =>
   useUserStore((state) => state.isAuthenticated);
-export const useIsLoading = () => useUserStore((state) => state.isLoading);
-export const useAuthError = () => useUserStore((state) => state.error);
-export const useIsDemo = () => useUserStore((state) => state.isDemo);
-export const useIsGuest = () => useUserStore((state) => state.isGuest);
-
-// 🚀 Initialize auth listener - אתחול מאזין אימות
-supabase.auth.onAuthStateChange(async (event: any, session: any) => {
-  const { user, isDemo, isGuest } = useUserStore.getState();
-
-  // Skip for demo/guest users - דילוג על משתמשי דמו/אורח
-  if (isDemo || isGuest) return;
-
-  if (event === "SIGNED_IN" && session?.user && !user) {
-    // Auto-refresh user data on sign in
-    await useUserStore.getState().refreshUser();
-  } else if (event === "SIGNED_OUT") {
-    // Clear state on sign out
-    useUserStore.setState({
-      user: null,
-      isAuthenticated: false,
-      isDemo: false,
-      isGuest: false,
-    });
-  }
-});
+export const useIsGuest = () =>
+  useUserStore((state) => state.user?.isGuest ?? false);
+export const useIsDemo = () =>
+  useUserStore((state) => state.user?.isDemo ?? false);

@@ -1,212 +1,200 @@
 /**
  * 📁 Path: /lib/types/user.ts
- * 📝 Description: טיפוסי משתמש ואימות - User and authentication types
+ * 📝 Description: User types and interfaces - טיפוסי משתמש וממשקים
  * 📅 Last Modified: 2024-01-XX 14:30
  *
- * 🔗 Dependencies:
- * - @/lib/types/supabase
+ * 🔗 Dependencies: None
  *
- * ⚠️ All types here are for the app's user management
+ * ⚠️ Note: These types should match your Supabase database schema
  */
 
-import type { Profile, UserPreferences, UserStats } from "./supabase";
-
-// 👤 User state interface - ממשק מצב משתמש
+// 👤 Main user interface - ממשק משתמש ראשי
 export interface User {
   id: string;
   email: string;
-  profile: Profile | null;
-  preferences: UserPreferences | null;
-  stats: UserStats | null;
-  isDemo: boolean;
+  name: string;
+  avatarUrl?: string;
+  role: "user" | "admin" | "trainer";
+  isGuest?: boolean;
+  isDemo?: boolean; // ✅ הוספנו את השדה החסר - Added missing field
+  demographics?: UserDemographics;
+  preferences?: UserPreferences;
+  stats?: UserStats;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 📊 User demographics - נתונים דמוגרפיים
+export interface UserDemographics {
+  age?: number;
+  gender?: "male" | "female" | "other";
+  height?: number; // בסנטימטרים - in cm
+  weight?: number; // בקילוגרמים - in kg
+  experienceLevel?: "beginner" | "intermediate" | "advanced";
+  primaryGoal?: "weight_loss" | "muscle_gain" | "general_fitness" | "endurance";
+  fitnessActivities?: string[];
+}
+
+// ⚙️ User preferences - העדפות משתמש
+export interface UserPreferences {
+  workoutDuration?: number; // בדקות - in minutes
+  workoutFrequency?: number; // פעמים בשבוע - times per week
+  preferredTime?: "morning" | "afternoon" | "evening";
+  equipment?: string[];
+  musicGenre?: string;
+  notifications?: boolean;
+  language?: "he" | "en";
+  theme?: "light" | "dark" | "auto";
+  units?: {
+    weight: "kg" | "lbs";
+    distance: "km" | "miles";
+    height: "cm" | "ft";
+  };
+}
+
+// 📈 User statistics - סטטיסטיקות משתמש
+export interface UserStats {
+  totalWorkouts?: number;
+  totalMinutes?: number;
+  totalCaloriesBurned?: number;
+  currentStreak?: number;
+  longestStreak?: number;
+  favoriteExercises?: string[];
+  lastWorkout?: string;
+  weeklyAverage?: number;
+  monthlyProgress?: number;
+  personalRecords?: PersonalRecord[];
+}
+
+// 🏆 Personal record - שיא אישי
+export interface PersonalRecord {
+  exerciseId: string;
+  exerciseName: string;
+  recordType: "weight" | "reps" | "time" | "distance";
+  value: number;
+  unit?: string;
+  achievedAt: string;
+  previousRecord?: number;
+}
+
+// 🎯 User goals - מטרות משתמש
+export interface UserGoal {
+  id: string;
+  userId: string;
+  type: "weight" | "strength" | "endurance" | "consistency" | "custom";
+  target: number;
+  current: number;
+  unit?: string;
+  deadline?: string;
+  description?: string;
+  isCompleted: boolean;
+  createdAt: string;
+  completedAt?: string;
+}
+
+// 📅 User plan subscription - מנוי לתכנית
+export interface UserPlanSubscription {
+  id: string;
+  userId: string;
+  planId: string;
+  planName: string;
+  startDate: string;
+  endDate?: string;
+  currentWeek: number;
+  currentDay: number;
+  isActive: boolean;
+  completedWorkouts: string[];
+  skippedWorkouts: string[];
+  progress: number; // 0-100%
+}
+
+// 🏃 User activity - פעילות משתמש
+export interface UserActivity {
+  id: string;
+  userId: string;
+  type: "workout" | "achievement" | "milestone" | "social";
+  title: string;
+  description?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+}
+
+// 🏅 User achievement - הישג משתמש
+export interface UserAchievement {
+  id: string;
+  userId: string;
+  achievementId: string;
+  title: string;
+  description: string;
+  icon?: string;
+  unlockedAt: string;
+  progress?: number;
+  tier?: "bronze" | "silver" | "gold" | "platinum";
+}
+
+// 📱 User device - מכשיר משתמש
+export interface UserDevice {
+  id: string;
+  userId: string;
+  deviceType: "ios" | "android" | "web";
+  deviceToken?: string;
+  lastActive: string;
+  appVersion: string;
+  osVersion?: string;
+  notificationsEnabled: boolean;
 }
 
 // 🔐 Authentication state - מצב אימות
 export interface AuthState {
-  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  user: User | null;
+  session: any | null;
   error: string | null;
 }
 
-// 📝 Login credentials - פרטי התחברות
-export interface LoginCredentials {
+// 📝 User registration data - נתוני הרשמה
+export interface RegistrationData {
   email: string;
   password: string;
-  rememberMe?: boolean;
-}
-
-// 📝 Signup data - נתוני הרשמה
-export interface SignupData extends LoginCredentials {
-  fullName: string;
-  acceptTerms: boolean;
-  preferredLanguage?: "he" | "en";
-}
-
-// 🔄 Auth response types - טיפוסי תגובת אימות
-export interface AuthResponse {
-  success: boolean;
-  user?: User;
-  error?: string;
-  needsEmailVerification?: boolean;
-}
-
-// 📊 User activity - פעילות משתמש
-export interface UserActivity {
-  lastLogin: Date;
-  lastWorkout: Date | null;
-  totalActiveMinutesToday: number;
-  weeklyGoalProgress: number; // Percentage 0-100
-}
-
-// 🏆 User achievements - הישגי משתמש
-export interface UserAchievement {
-  id: string;
   name: string;
-  description: string;
-  icon: string;
-  unlockedAt: Date;
-  progress?: number; // For progressive achievements
-  maxProgress?: number;
+  acceptTerms: boolean;
+  newsletter?: boolean;
+  referralCode?: string;
 }
 
-// 💪 Personal records - שיאים אישיים
-export interface PersonalRecord {
-  exerciseId: string;
-  exerciseName: string;
-  value: number;
-  unit: "kg" | "lbs" | "reps" | "seconds" | "meters";
-  achievedAt: Date;
-  previousRecord?: number;
+// 🔄 User update payload - נתונים לעדכון משתמש
+export interface UserUpdatePayload {
+  name?: string;
+  avatarUrl?: string;
+  demographics?: Partial<UserDemographics>;
+  preferences?: Partial<UserPreferences>;
 }
 
-// 🎯 User goals - יעדי משתמש
-export interface UserGoal {
-  id: string;
-  type: "weight_loss" | "muscle_gain" | "strength" | "endurance" | "custom";
-  title: string;
-  description?: string;
-  targetValue?: number;
-  currentValue?: number;
-  unit?: string;
-  deadline?: Date;
-  isCompleted: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+// 🎭 Guest user factory - יצירת משתמש אורח
+export const createGuestUser = (): User => ({
+  id: `guest-${Date.now()}`,
+  email: "guest@gymovo.com",
+  name: "אורח",
+  role: "user",
+  isGuest: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
 
-// 📅 Workout preferences - העדפות אימון
-export interface WorkoutPreferences {
-  preferredDays: number[]; // 0-6 (Sunday-Saturday)
-  preferredTime: "morning" | "afternoon" | "evening" | "night";
-  workoutDuration: 30 | 45 | 60 | 90 | 120; // minutes
-  restDaysBetweenWorkouts: number;
-  focusAreas: ("strength" | "cardio" | "flexibility" | "balance")[];
-}
-
-// 🔔 Notification settings - הגדרות התראות
-export interface NotificationSettings {
-  workoutReminders: boolean;
-  achievementAlerts: boolean;
-  weeklyProgress: boolean;
-  motivationalQuotes: boolean;
-  reminderTime?: string; // HH:MM format
-  quietHoursStart?: string; // HH:MM format
-  quietHoursEnd?: string; // HH:MM format
-}
-
-// 📈 Progress tracking - מעקב התקדמות
-export interface ProgressData {
-  date: Date;
-  weight?: number;
-  bodyFat?: number;
-  muscleMass?: number;
-  measurements?: {
-    chest?: number;
-    waist?: number;
-    hips?: number;
-    arms?: number;
-    thighs?: number;
-  };
-  photos?: {
-    front?: string;
-    side?: string;
-    back?: string;
-  };
-  notes?: string;
-}
-
-// 🏃 Session data - נתוני סשן
-export interface SessionData {
-  sessionId: string;
-  startTime: Date;
-  lastActivity: Date;
-  deviceInfo: {
-    platform: "ios" | "android" | "web";
-    deviceModel?: string;
-    appVersion: string;
-  };
-  location?: {
-    latitude: number;
-    longitude: number;
-    gymName?: string;
-  };
-}
-
-// 🔒 Privacy settings - הגדרות פרטיות
-export interface PrivacySettings {
-  profileVisibility: "public" | "friends" | "private";
-  shareWorkouts: boolean;
-  shareProgress: boolean;
-  shareAchievements: boolean;
-  allowFriendRequests: boolean;
-  showOnLeaderboards: boolean;
-}
-
-// 🌟 User level info - מידע על רמת המשתמש
-export interface UserLevel {
-  level: number;
-  title: string;
-  currentXP: number;
-  requiredXP: number;
-  perks: string[];
-  nextLevelReward?: string;
-}
-
-// 💳 Subscription info - מידע על מנוי
-export interface SubscriptionInfo {
-  plan: "free" | "basic" | "premium" | "pro";
-  status: "active" | "inactive" | "trial" | "expired";
-  startDate: Date;
-  endDate?: Date;
-  autoRenew: boolean;
-  features: string[];
-}
-
-// 🤝 Social connections - חיבורים חברתיים
-export interface SocialConnection {
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  connectionType: "friend" | "trainer" | "trainee";
-  connectedAt: Date;
-  sharedWorkouts?: number;
-}
-
-// 📱 Device preferences - העדפות מכשיר
-export interface DevicePreferences {
-  hapticFeedback: boolean;
-  soundEffects: boolean;
-  autoPlayVideos: boolean;
-  downloadVideosOnWifi: boolean;
-  cacheSize: "small" | "medium" | "large"; // 100MB, 500MB, 1GB
-}
-
-// 🎨 Theme customization - התאמת ערכת נושא
-export interface ThemeCustomization {
-  primaryColor?: string;
-  accentColor?: string;
-  fontScale: number; // 0.8-1.2
-  highContrast: boolean;
-  reduceMotion: boolean;
-}
+// 🎮 Demo user factory - יצירת משתמש דמו
+export const createDemoUser = (demoData: any): User => ({
+  id: `demo-${Date.now()}`,
+  email: demoData.email,
+  name: demoData.name,
+  avatarUrl: demoData.avatar,
+  role: "user",
+  isGuest: false,
+  isDemo: true,
+  demographics: {
+    experienceLevel: demoData.level,
+  },
+  stats: demoData.stats,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});

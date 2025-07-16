@@ -1,6 +1,6 @@
 /**
- * 📁 Path: /lib/types/supabase.ts
- * 📝 Description: טיפוסי TypeScript לבסיס הנתונים - Database TypeScript types
+ * 📁 Path: /lib/types/user.ts
+ * 📝 Description: User types and interfaces - טיפוסי משתמש וממשקים
  * 📅 Last Modified: 2024-01-XX 14:30
  *
  * 🔗 Dependencies: None
@@ -8,402 +8,193 @@
  * ⚠️ Note: These types should match your Supabase database schema
  */
 
-// 🗄️ Database schema types - טיפוסי סכמת בסיס הנתונים
-export type Database = {
-  public: {
-    Tables: {
-      // 👤 User profiles - פרופילי משתמשים
-      profiles: {
-        Row: {
-          id: string;
-          email: string;
-          full_name: string | null;
-          avatar_url: string | null;
-          created_at: string;
-          updated_at: string;
-          is_demo_user: boolean;
-        };
-        Insert: {
-          id: string;
-          email: string;
-          full_name?: string | null;
-          avatar_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          is_demo_user?: boolean;
-        };
-        Update: {
-          id?: string;
-          email?: string;
-          full_name?: string | null;
-          avatar_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          is_demo_user?: boolean;
-        };
-      };
+// 👤 Main user interface - ממשק משתמש ראשי
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string;
+  role: "user" | "admin" | "trainer";
+  isGuest?: boolean;
+  isDemo?: boolean; // ✅ הוספנו את השדה החסר - Added missing field
+  demographics?: UserDemographics;
+  preferences?: UserPreferences;
+  stats?: UserStats;
+  createdAt: string;
+  updatedAt: string;
+}
 
-      // ⚙️ User preferences - העדפות משתמש
-      user_preferences: {
-        Row: {
-          id: string;
-          user_id: string;
-          language: "he" | "en";
-          units: "metric" | "imperial";
-          theme: "light" | "dark" | "auto";
-          notifications_enabled: boolean;
-          workout_reminders: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          language?: "he" | "en";
-          units?: "metric" | "imperial";
-          theme?: "light" | "dark" | "auto";
-          notifications_enabled?: boolean;
-          workout_reminders?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          language?: "he" | "en";
-          units?: "metric" | "imperial";
-          theme?: "light" | "dark" | "auto";
-          notifications_enabled?: boolean;
-          workout_reminders?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
+// 📊 User demographics - נתונים דמוגרפיים
+export interface UserDemographics {
+  age?: number;
+  gender?: "male" | "female" | "other";
+  height?: number; // בסנטימטרים - in cm
+  weight?: number; // בקילוגרמים - in kg
+  experienceLevel?: "beginner" | "intermediate" | "advanced";
+  primaryGoal?: "weight_loss" | "muscle_gain" | "general_fitness" | "endurance";
+  fitnessActivities?: string[];
+}
 
-      // 📊 User statistics - סטטיסטיקות משתמש
-      user_stats: {
-        Row: {
-          id: string;
-          user_id: string;
-          total_workouts: number;
-          total_minutes: number;
-          current_streak: number;
-          longest_streak: number;
-          last_workout_date: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          total_workouts?: number;
-          total_minutes?: number;
-          current_streak?: number;
-          longest_streak?: number;
-          last_workout_date?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          total_workouts?: number;
-          total_minutes?: number;
-          current_streak?: number;
-          longest_streak?: number;
-          last_workout_date?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-
-      // 🏋️ Workouts - אימונים
-      workouts: {
-        Row: {
-          id: string;
-          user_id: string;
-          name: string;
-          description: string | null;
-          duration_minutes: number;
-          calories_burned: number | null;
-          status: "planned" | "in_progress" | "completed" | "skipped";
-          scheduled_date: string | null;
-          started_at: string | null;
-          completed_at: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          name: string;
-          description?: string | null;
-          duration_minutes?: number;
-          calories_burned?: number | null;
-          status?: "planned" | "in_progress" | "completed" | "skipped";
-          scheduled_date?: string | null;
-          started_at?: string | null;
-          completed_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          name?: string;
-          description?: string | null;
-          duration_minutes?: number;
-          calories_burned?: number | null;
-          status?: "planned" | "in_progress" | "completed" | "skipped";
-          scheduled_date?: string | null;
-          started_at?: string | null;
-          completed_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-
-      // 💪 Exercises - תרגילים
-      exercises: {
-        Row: {
-          id: string;
-          name: string;
-          name_he: string;
-          category: "strength" | "cardio" | "flexibility" | "balance" | "other";
-          muscle_groups: string[];
-          equipment: string | null;
-          difficulty: "beginner" | "intermediate" | "advanced";
-          instructions: string | null;
-          instructions_he: string | null;
-          video_url: string | null;
-          image_url: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          name_he: string;
-          category: "strength" | "cardio" | "flexibility" | "balance" | "other";
-          muscle_groups?: string[];
-          equipment?: string | null;
-          difficulty?: "beginner" | "intermediate" | "advanced";
-          instructions?: string | null;
-          instructions_he?: string | null;
-          video_url?: string | null;
-          image_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          name_he?: string;
-          category?:
-            | "strength"
-            | "cardio"
-            | "flexibility"
-            | "balance"
-            | "other";
-          muscle_groups?: string[];
-          equipment?: string | null;
-          difficulty?: "beginner" | "intermediate" | "advanced";
-          instructions?: string | null;
-          instructions_he?: string | null;
-          video_url?: string | null;
-          image_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-
-      // 🔗 Workout exercises junction - חיבור בין אימונים לתרגילים
-      workout_exercises: {
-        Row: {
-          id: string;
-          workout_id: string;
-          exercise_id: string;
-          order_index: number;
-          sets_planned: number;
-          sets_completed: number;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          workout_id: string;
-          exercise_id: string;
-          order_index: number;
-          sets_planned?: number;
-          sets_completed?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          workout_id?: string;
-          exercise_id?: string;
-          order_index?: number;
-          sets_planned?: number;
-          sets_completed?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-
-      // 📝 Workout sets - סטים באימון
-      workout_sets: {
-        Row: {
-          id: string;
-          workout_exercise_id: string;
-          set_number: number;
-          reps: number | null;
-          weight_kg: number | null;
-          distance_km: number | null;
-          duration_seconds: number | null;
-          rest_seconds: number | null;
-          notes: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          workout_exercise_id: string;
-          set_number: number;
-          reps?: number | null;
-          weight_kg?: number | null;
-          distance_km?: number | null;
-          duration_seconds?: number | null;
-          rest_seconds?: number | null;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          workout_exercise_id?: string;
-          set_number?: number;
-          reps?: number | null;
-          weight_kg?: number | null;
-          distance_km?: number | null;
-          duration_seconds?: number | null;
-          rest_seconds?: number | null;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-
-      // 📋 Workout plans - תוכניות אימון
-      plans: {
-        Row: {
-          id: string;
-          user_id: string | null;
-          name: string;
-          description: string | null;
-          duration_weeks: number;
-          difficulty: "beginner" | "intermediate" | "advanced";
-          goal:
-            | "strength"
-            | "weight_loss"
-            | "muscle_gain"
-            | "endurance"
-            | "general_fitness";
-          is_public: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id?: string | null;
-          name: string;
-          description?: string | null;
-          duration_weeks: number;
-          difficulty?: "beginner" | "intermediate" | "advanced";
-          goal?:
-            | "strength"
-            | "weight_loss"
-            | "muscle_gain"
-            | "endurance"
-            | "general_fitness";
-          is_public?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string | null;
-          name?: string;
-          description?: string | null;
-          duration_weeks?: number;
-          difficulty?: "beginner" | "intermediate" | "advanced";
-          goal?:
-            | "strength"
-            | "weight_loss"
-            | "muscle_gain"
-            | "endurance"
-            | "general_fitness";
-          is_public?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-
-      // 🔗 Plan workouts junction - חיבור בין תוכניות לאימונים
-      plan_workouts: {
-        Row: {
-          id: string;
-          plan_id: string;
-          workout_template_id: string;
-          week_number: number;
-          day_number: number;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          plan_id: string;
-          workout_template_id: string;
-          week_number: number;
-          day_number: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          plan_id?: string;
-          workout_template_id?: string;
-          week_number?: number;
-          day_number?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-    };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
+// ⚙️ User preferences - העדפות משתמש
+export interface UserPreferences {
+  workoutDuration?: number; // בדקות - in minutes
+  workoutFrequency?: number; // פעמים בשבוע - times per week
+  preferredTime?: "morning" | "afternoon" | "evening";
+  equipment?: string[];
+  musicGenre?: string;
+  notifications?: boolean;
+  language?: "he" | "en";
+  theme?: "light" | "dark" | "auto";
+  units?: {
+    weight: "kg" | "lbs";
+    distance: "km" | "miles";
+    height: "cm" | "ft";
   };
-};
+}
 
-// 🛠️ Helper types - טיפוסי עזר
-export type Tables<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Row"];
-export type InsertTables<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Insert"];
-export type UpdateTables<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Update"];
+// 📈 User statistics - סטטיסטיקות משתמש
+export interface UserStats {
+  totalWorkouts?: number;
+  totalMinutes?: number;
+  totalCaloriesBurned?: number;
+  currentStreak?: number;
+  longestStreak?: number;
+  favoriteExercises?: string[];
+  lastWorkout?: string;
+  weeklyAverage?: number;
+  monthlyProgress?: number;
+  personalRecords?: PersonalRecord[];
+}
 
-// 🎯 Commonly used types - טיפוסים נפוצים
-export type Profile = Tables<"profiles">;
-export type UserPreferences = Tables<"user_preferences">;
-export type UserStats = Tables<"user_stats">;
-export type Workout = Tables<"workouts">;
-export type Exercise = Tables<"exercises">;
-export type WorkoutExercise = Tables<"workout_exercises">;
-export type WorkoutSet = Tables<"workout_sets">;
-export type Plan = Tables<"plans">;
-export type PlanWorkout = Tables<"plan_workouts">;
+// 🏆 Personal record - שיא אישי
+export interface PersonalRecord {
+  exerciseId: string;
+  exerciseName: string;
+  recordType: "weight" | "reps" | "time" | "distance";
+  value: number;
+  unit?: string;
+  achievedAt: string;
+  previousRecord?: number;
+}
 
-// 🔧 Export Database type explicitly - ייצוא מפורש של Database
+// 🎯 User goals - מטרות משתמש
+export interface UserGoal {
+  id: string;
+  userId: string;
+  type: "weight" | "strength" | "endurance" | "consistency" | "custom";
+  target: number;
+  current: number;
+  unit?: string;
+  deadline?: string;
+  description?: string;
+  isCompleted: boolean;
+  createdAt: string;
+  completedAt?: string;
+}
+
+// 📅 User plan subscription - מנוי לתכנית
+export interface UserPlanSubscription {
+  id: string;
+  userId: string;
+  planId: string;
+  planName: string;
+  startDate: string;
+  endDate?: string;
+  currentWeek: number;
+  currentDay: number;
+  isActive: boolean;
+  completedWorkouts: string[];
+  skippedWorkouts: string[];
+  progress: number; // 0-100%
+}
+
+// 🏃 User activity - פעילות משתמש
+export interface UserActivity {
+  id: string;
+  userId: string;
+  type: "workout" | "achievement" | "milestone" | "social";
+  title: string;
+  description?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+}
+
+// 🏅 User achievement - הישג משתמש
+export interface UserAchievement {
+  id: string;
+  userId: string;
+  achievementId: string;
+  title: string;
+  description: string;
+  icon?: string;
+  unlockedAt: string;
+  progress?: number;
+  tier?: "bronze" | "silver" | "gold" | "platinum";
+}
+
+// 📱 User device - מכשיר משתמש
+export interface UserDevice {
+  id: string;
+  userId: string;
+  deviceType: "ios" | "android" | "web";
+  deviceToken?: string;
+  lastActive: string;
+  appVersion: string;
+  osVersion?: string;
+  notificationsEnabled: boolean;
+}
+
+// 🔐 Authentication state - מצב אימות
+export interface AuthState {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: User | null;
+  session: any | null;
+  error: string | null;
+}
+
+// 📝 User registration data - נתוני הרשמה
+export interface RegistrationData {
+  email: string;
+  password: string;
+  name: string;
+  acceptTerms: boolean;
+  newsletter?: boolean;
+  referralCode?: string;
+}
+
+// 🔄 User update payload - נתונים לעדכון משתמש
+export interface UserUpdatePayload {
+  name?: string;
+  avatarUrl?: string;
+  demographics?: Partial<UserDemographics>;
+  preferences?: Partial<UserPreferences>;
+}
+
+// 🎭 Guest user factory - יצירת משתמש אורח
+export const createGuestUser = (): User => ({
+  id: `guest-${Date.now()}`,
+  email: "guest@gymovo.com",
+  name: "אורח",
+  role: "user",
+  isGuest: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
+
+// 🎮 Demo user factory - יצירת משתמש דמו
+export const createDemoUser = (demoData: any): User => ({
+  id: `demo-${Date.now()}`,
+  email: demoData.email,
+  name: demoData.name,
+  avatarUrl: demoData.avatar,
+  role: "user",
+  isGuest: false,
+  isDemo: true,
+  demographics: {
+    experienceLevel: demoData.level,
+  },
+  stats: demoData.stats,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});

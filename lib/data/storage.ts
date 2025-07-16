@@ -1,402 +1,411 @@
 /**
  * 📁 Path: /lib/data/storage.ts
- * 📝 Description: ניהול אחסון מקומי - Local storage management
- * 🔢 Version: 1.0
+ * 📝 Description: Local storage management - ניהול אחסון מקומי
+ * 📅 Last Modified: 2024-01-XX 14:30
  *
  * 🔗 Dependencies:
  * - @react-native-async-storage/async-storage
  *
- * ⚠️ Handles all local data persistence
+ * ⚠️ Note: All storage operations are wrapped in try-catch for safety
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // 🔑 Storage keys - מפתחות אחסון
-export const STORAGE_KEYS = {
-  // User related - קשור למשתמש
-  USER_DATA: "@gym_app:user_data",
-  USER_TOKEN: "@gym_app:user_token",
-  USER_PREFERENCES: "@gym_app:user_preferences",
-
-  // App settings - הגדרות אפליקציה
-  APP_LANGUAGE: "@gym_app:language",
-  APP_THEME: "@gym_app:theme",
-  APP_FIRST_LAUNCH: "@gym_app:first_launch",
-  ONBOARDING_COMPLETED: "@gym_app:onboarding_completed",
-
-  // Workout data - נתוני אימון
-  ACTIVE_WORKOUT: "@gym_app:active_workout",
-  WORKOUT_DRAFTS: "@gym_app:workout_drafts",
-  EXERCISE_FAVORITES: "@gym_app:exercise_favorites",
-
-  // Cache - מטמון
-  EXERCISES_CACHE: "@gym_app:exercises_cache",
-  PLANS_CACHE: "@gym_app:plans_cache",
-  LAST_SYNC: "@gym_app:last_sync",
-
-  // Dev mode - מצב פיתוח
-  DEV_MODE_ENABLED: "@gym_app:dev_mode",
-  DEV_MODE_TAPS: "@gym_app:dev_taps",
+const STORAGE_KEYS = {
+  USER: "@gymovo_user",
+  WORKOUTS: "@gymovo_workouts",
+  PLANS: "@gymovo_plans",
+  SETTINGS: "@gymovo_settings",
+  ONBOARDING: "@gymovo_onboarding_completed",
+  AUTH_TOKEN: "@gymovo_auth_token",
+  LAST_SYNC: "@gymovo_last_sync",
+  OFFLINE_QUEUE: "@gymovo_offline_queue",
 } as const;
 
-// 🛠️ Storage utilities - כלי אחסון
-
-/**
- * 💾 Save data to storage - שמירת נתונים לאחסון
- */
-export const saveToStorage = async <T>(
-  key: string,
-  value: T
-): Promise<boolean> => {
-  try {
-    const jsonValue = JSON.stringify(value);
-    await AsyncStorage.setItem(key, jsonValue);
-    console.log(`✅ Saved to storage: ${key}`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Error saving to storage: ${key}`, error);
-    return false;
-  }
-};
-
-/**
- * 📖 Get data from storage - קבלת נתונים מאחסון
- */
-export const getFromStorage = async <T>(key: string): Promise<T | null> => {
-  try {
-    const jsonValue = await AsyncStorage.getItem(key);
-    if (jsonValue === null) {
-      console.log(`ℹ️ No data found for key: ${key}`);
-      return null;
-    }
-
-    const value = JSON.parse(jsonValue) as T;
-    console.log(`✅ Retrieved from storage: ${key}`);
-    return value;
-  } catch (error) {
-    console.error(`❌ Error getting from storage: ${key}`, error);
-    return null;
-  }
-};
-
-/**
- * 🗑️ Remove data from storage - מחיקת נתונים מאחסון
- */
-export const removeFromStorage = async (key: string): Promise<boolean> => {
-  try {
-    await AsyncStorage.removeItem(key);
-    console.log(`✅ Removed from storage: ${key}`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Error removing from storage: ${key}`, error);
-    return false;
-  }
-};
-
-/**
- * 🗑️ Clear all storage - ניקוי כל האחסון
- */
-export const clearAllStorage = async (): Promise<boolean> => {
-  try {
-    await AsyncStorage.clear();
-    console.log("✅ All storage cleared");
-    return true;
-  } catch (error) {
-    console.error("❌ Error clearing storage:", error);
-    return false;
-  }
-};
-
-/**
- * 🔑 Get all storage keys - קבלת כל מפתחות האחסון
- */
-export const getAllStorageKeys = async (): Promise<string[]> => {
-  try {
-    const keys = await AsyncStorage.getAllKeys();
-    console.log(`✅ Found ${keys.length} storage keys`);
-    return keys;
-  } catch (error) {
-    console.error("❌ Error getting storage keys:", error);
-    return [];
-  }
-};
-
-/**
- * 📊 Get storage info - קבלת מידע על האחסון
- */
-export const getStorageInfo = async () => {
-  try {
-    const keys = await getAllStorageKeys();
-    const info: Record<string, any> = {};
-
-    for (const key of keys) {
-      const value = await AsyncStorage.getItem(key);
-      info[key] = value ? JSON.parse(value) : null;
-    }
-
-    return info;
-  } catch (error) {
-    console.error("❌ Error getting storage info:", error);
-    return {};
-  }
-};
-
-// 🎯 Specific storage functions - פונקציות אחסון ספציפיות
-
-/**
- * 👤 User storage - אחסון משתמש
- */
-export const userStorage = {
-  // Save user data - שמירת נתוני משתמש
-  saveUser: async (userData: any) => {
-    return saveToStorage(STORAGE_KEYS.USER_DATA, userData);
-  },
-
-  // Get user data - קבלת נתוני משתמש
-  getUser: async () => {
-    return getFromStorage<any>(STORAGE_KEYS.USER_DATA);
-  },
-
-  // Clear user data - ניקוי נתוני משתמש
-  clearUser: async () => {
-    return removeFromStorage(STORAGE_KEYS.USER_DATA);
-  },
-
-  // Save token - שמירת טוקן
-  saveToken: async (token: string) => {
-    return saveToStorage(STORAGE_KEYS.USER_TOKEN, token);
-  },
-
-  // Get token - קבלת טוקן
-  getToken: async () => {
-    return getFromStorage<string>(STORAGE_KEYS.USER_TOKEN);
-  },
-
-  // Clear token - ניקוי טוקן
-  clearToken: async () => {
-    return removeFromStorage(STORAGE_KEYS.USER_TOKEN);
-  },
-};
-
-/**
- * ⚙️ App settings storage - אחסון הגדרות אפליקציה
- */
-export const settingsStorage = {
-  // Save language - שמירת שפה
-  saveLanguage: async (language: "he" | "en") => {
-    return saveToStorage(STORAGE_KEYS.APP_LANGUAGE, language);
-  },
-
-  // Get language - קבלת שפה
-  getLanguage: async () => {
-    return getFromStorage<"he" | "en">(STORAGE_KEYS.APP_LANGUAGE);
-  },
-
-  // Save theme - שמירת ערכת נושא
-  saveTheme: async (theme: "light" | "dark" | "auto") => {
-    return saveToStorage(STORAGE_KEYS.APP_THEME, theme);
-  },
-
-  // Get theme - קבלת ערכת נושא
-  getTheme: async () => {
-    return getFromStorage<"light" | "dark" | "auto">(STORAGE_KEYS.APP_THEME);
-  },
-
-  // Check if first launch - בדיקה אם זו הפעלה ראשונה
-  isFirstLaunch: async () => {
-    const firstLaunch = await getFromStorage<boolean>(
-      STORAGE_KEYS.APP_FIRST_LAUNCH
-    );
-    return firstLaunch === null || firstLaunch === true;
-  },
-
-  // Mark first launch complete - סימון השלמת הפעלה ראשונה
-  completeFirstLaunch: async () => {
-    return saveToStorage(STORAGE_KEYS.APP_FIRST_LAUNCH, false);
-  },
-
-  // Check onboarding status - בדיקת סטטוס הדרכה
-  isOnboardingCompleted: async () => {
-    return getFromStorage<boolean>(STORAGE_KEYS.ONBOARDING_COMPLETED);
-  },
-
-  // Complete onboarding - השלמת הדרכה
-  completeOnboarding: async () => {
-    return saveToStorage(STORAGE_KEYS.ONBOARDING_COMPLETED, true);
-  },
-};
-
-/**
- * 🏋️ Workout storage - אחסון אימונים
- */
-export const workoutStorage = {
-  // Save active workout - שמירת אימון פעיל
-  saveActiveWorkout: async (workout: any) => {
-    return saveToStorage(STORAGE_KEYS.ACTIVE_WORKOUT, workout);
-  },
-
-  // Get active workout - קבלת אימון פעיל
-  getActiveWorkout: async () => {
-    return getFromStorage<any>(STORAGE_KEYS.ACTIVE_WORKOUT);
-  },
-
-  // Clear active workout - ניקוי אימון פעיל
-  clearActiveWorkout: async () => {
-    return removeFromStorage(STORAGE_KEYS.ACTIVE_WORKOUT);
-  },
-
-  // Save workout draft - שמירת טיוטת אימון
-  saveWorkoutDraft: async (draft: any) => {
-    const drafts =
-      (await getFromStorage<any[]>(STORAGE_KEYS.WORKOUT_DRAFTS)) || [];
-    drafts.push(draft);
-    return saveToStorage(STORAGE_KEYS.WORKOUT_DRAFTS, drafts);
-  },
-
-  // Get workout drafts - קבלת טיוטות אימון
-  getWorkoutDrafts: async () => {
-    return getFromStorage<any[]>(STORAGE_KEYS.WORKOUT_DRAFTS) || [];
-  },
-
-  // Clear workout drafts - ניקוי טיוטות אימון
-  clearWorkoutDrafts: async () => {
-    return removeFromStorage(STORAGE_KEYS.WORKOUT_DRAFTS);
-  },
-
-  // Toggle favorite exercise - החלפת מצב תרגיל מועדף
-  toggleFavoriteExercise: async (exerciseId: string) => {
-    const favorites =
-      (await getFromStorage<string[]>(STORAGE_KEYS.EXERCISE_FAVORITES)) || [];
-    const index = favorites.indexOf(exerciseId);
-
-    if (index > -1) {
-      favorites.splice(index, 1);
-    } else {
-      favorites.push(exerciseId);
-    }
-
-    return saveToStorage(STORAGE_KEYS.EXERCISE_FAVORITES, favorites);
-  },
-
-  // Get favorite exercises - קבלת תרגילים מועדפים
-  getFavoriteExercises: async () => {
-    return getFromStorage<string[]>(STORAGE_KEYS.EXERCISE_FAVORITES) || [];
-  },
-};
-
-/**
- * 💾 Cache storage - אחסון מטמון
- */
-export const cacheStorage = {
-  // Save to cache with expiry - שמירה למטמון עם תפוגה
-  saveToCache: async <T>(key: string, data: T, expiryMinutes: number = 60) => {
-    const cacheData = {
-      data,
-      timestamp: Date.now(),
-      expiry: Date.now() + expiryMinutes * 60 * 1000,
-    };
-    return saveToStorage(key, cacheData);
-  },
-
-  // Get from cache - קבלה מהמטמון
-  getFromCache: async <T>(key: string): Promise<T | null> => {
-    const cacheData = await getFromStorage<{
-      data: T;
-      timestamp: number;
-      expiry: number;
-    }>(key);
-
-    if (!cacheData) return null;
-
-    // Check if expired - בדיקה אם פג תוקף
-    if (Date.now() > cacheData.expiry) {
-      await removeFromStorage(key);
-      return null;
-    }
-
-    return cacheData.data;
-  },
-
-  // Clear expired cache - ניקוי מטמון שפג תוקפו
-  clearExpiredCache: async () => {
-    const keys = await getAllStorageKeys();
-    const cacheKeys = keys.filter((key) => key.includes("cache"));
-
-    for (const key of cacheKeys) {
-      const cacheData = await getFromStorage<any>(key);
-      if (cacheData && cacheData.expiry && Date.now() > cacheData.expiry) {
-        await removeFromStorage(key);
+// 📦 Storage utility object - אובייקט כלי אחסון
+export const storage = {
+  // 👤 User operations - פעולות משתמש
+  user: {
+    async save(user: any) {
+      try {
+        await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+      } catch (error) {
+        console.error("Error saving user:", error);
+        throw error;
       }
+    },
+
+    async get() {
+      try {
+        const user = await AsyncStorage.getItem(STORAGE_KEYS.USER);
+        return user ? JSON.parse(user) : null;
+      } catch (error) {
+        console.error("Error getting user:", error);
+        return null;
+      }
+    },
+
+    async remove() {
+      try {
+        await AsyncStorage.removeItem(STORAGE_KEYS.USER);
+      } catch (error) {
+        console.error("Error removing user:", error);
+        throw error;
+      }
+    },
+  },
+
+  // 🏋️ Workouts operations - פעולות אימונים
+  workouts: {
+    async save(workouts: any[]) {
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.WORKOUTS,
+          JSON.stringify(workouts)
+        );
+      } catch (error) {
+        console.error("Error saving workouts:", error);
+        throw error;
+      }
+    },
+
+    async get() {
+      try {
+        const workouts = await AsyncStorage.getItem(STORAGE_KEYS.WORKOUTS);
+        return workouts ? JSON.parse(workouts) : [];
+      } catch (error) {
+        console.error("Error getting workouts:", error);
+        return [];
+      }
+    },
+
+    async add(workout: any) {
+      try {
+        const workouts = await this.get();
+        workouts.push(workout);
+        await this.save(workouts);
+      } catch (error) {
+        console.error("Error adding workout:", error);
+        throw error;
+      }
+    },
+
+    async update(id: string, updates: any) {
+      try {
+        const workouts = await this.get();
+        const index = workouts.findIndex((w: any) => w.id === id);
+        if (index !== -1) {
+          workouts[index] = { ...workouts[index], ...updates };
+          await this.save(workouts);
+        }
+      } catch (error) {
+        console.error("Error updating workout:", error);
+        throw error;
+      }
+    },
+
+    async remove(id: string) {
+      try {
+        const workouts = await this.get();
+        const filtered = workouts.filter((w: any) => w.id !== id);
+        await this.save(filtered);
+      } catch (error) {
+        console.error("Error removing workout:", error);
+        throw error;
+      }
+    },
+  },
+
+  // ⚙️ Settings operations - פעולות הגדרות
+  settings: {
+    async save(settings: any) {
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.SETTINGS,
+          JSON.stringify(settings)
+        );
+      } catch (error) {
+        console.error("Error saving settings:", error);
+        throw error;
+      }
+    },
+
+    async get() {
+      try {
+        const settings = await AsyncStorage.getItem(STORAGE_KEYS.SETTINGS);
+        return settings ? JSON.parse(settings) : {};
+      } catch (error) {
+        console.error("Error getting settings:", error);
+        return {};
+      }
+    },
+
+    async update(updates: any) {
+      try {
+        const settings = await this.get();
+        const updated = { ...settings, ...updates };
+        await this.save(updated);
+      } catch (error) {
+        console.error("Error updating settings:", error);
+        throw error;
+      }
+    },
+  },
+
+  // 🎯 Onboarding operations - פעולות אונבורדינג
+  onboarding: {
+    async setCompleted(completed: boolean = true) {
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.ONBOARDING,
+          JSON.stringify(completed)
+        );
+      } catch (error) {
+        console.error("Error saving onboarding status:", error);
+        throw error;
+      }
+    },
+
+    async isCompleted() {
+      try {
+        const completed = await AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING);
+        return completed ? JSON.parse(completed) : false;
+      } catch (error) {
+        console.error("Error getting onboarding status:", error);
+        return false;
+      }
+    },
+  },
+
+  // 🔐 Auth token operations - פעולות token אימות
+  auth: {
+    async saveToken(token: string) {
+      try {
+        await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+      } catch (error) {
+        console.error("Error saving auth token:", error);
+        throw error;
+      }
+    },
+
+    async getToken() {
+      try {
+        return await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      } catch (error) {
+        console.error("Error getting auth token:", error);
+        return null;
+      }
+    },
+
+    async removeToken() {
+      try {
+        await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      } catch (error) {
+        console.error("Error removing auth token:", error);
+        throw error;
+      }
+    },
+  },
+
+  // 📅 Last sync operations - פעולות סנכרון אחרון
+  sync: {
+    async saveLastSync(timestamp: string) {
+      try {
+        await AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, timestamp);
+      } catch (error) {
+        console.error("Error saving last sync:", error);
+        throw error;
+      }
+    },
+
+    async getLastSync() {
+      try {
+        return await AsyncStorage.getItem(STORAGE_KEYS.LAST_SYNC);
+      } catch (error) {
+        console.error("Error getting last sync:", error);
+        return null;
+      }
+    },
+  },
+
+  // 📴 Offline queue operations - פעולות תור אופליין
+  offlineQueue: {
+    async add(action: any) {
+      try {
+        const queue = await this.getAll();
+        queue.push({
+          ...action,
+          timestamp: new Date().toISOString(),
+          id: `${Date.now()}-${Math.random()}`,
+        });
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.OFFLINE_QUEUE,
+          JSON.stringify(queue)
+        );
+      } catch (error) {
+        console.error("Error adding to offline queue:", error);
+        throw error;
+      }
+    },
+
+    async getAll() {
+      try {
+        const queue = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_QUEUE);
+        return queue ? JSON.parse(queue) : [];
+      } catch (error) {
+        console.error("Error getting offline queue:", error);
+        return [];
+      }
+    },
+
+    async clear() {
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.OFFLINE_QUEUE,
+          JSON.stringify([])
+        );
+      } catch (error) {
+        console.error("Error clearing offline queue:", error);
+        throw error;
+      }
+    },
+
+    async process(callback: (action: any) => Promise<boolean>) {
+      try {
+        const queue = await this.getAll();
+        const remaining = [];
+
+        for (const action of queue) {
+          try {
+            const success = await callback(action);
+            if (!success) {
+              remaining.push(action);
+            }
+          } catch {
+            remaining.push(action);
+          }
+        }
+
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.OFFLINE_QUEUE,
+          JSON.stringify(remaining)
+        );
+
+        return {
+          processed: queue.length - remaining.length,
+          remaining: remaining.length,
+        };
+      } catch (error) {
+        console.error("Error processing offline queue:", error);
+        throw error;
+      }
+    },
+  },
+
+  // 🗑️ Utility functions - פונקציות כלליות
+  async getAllKeys() {
+    try {
+      return await AsyncStorage.getAllKeys();
+    } catch (error) {
+      console.error("Error getting all keys:", error);
+      return [];
+    }
+  },
+
+  async multiGet(keys: string[]) {
+    try {
+      const results = await AsyncStorage.multiGet(keys);
+      return results.reduce((acc, [key, value]) => {
+        if (value) {
+          acc[key] = JSON.parse(value);
+        }
+        return acc;
+      }, {} as Record<string, any>);
+    } catch (error) {
+      console.error("Error multi getting:", error);
+      return {};
+    }
+  },
+
+  async getStorageInfo() {
+    try {
+      const keys = await this.getAllKeys();
+      const info = {
+        totalKeys: keys.length,
+        gymvoKeys: keys.filter((k) => k.startsWith("@gymovo")).length,
+        size: 0,
+      };
+
+      // חישוב גודל משוער - Calculate estimated size
+      for (const key of keys) {
+        const value = await AsyncStorage.getItem(key);
+        if (value) {
+          info.size += value.length;
+        }
+      }
+
+      return info;
+    } catch (error) {
+      console.error("Error getting storage info:", error);
+      return { totalKeys: 0, gymvoKeys: 0, size: 0 };
     }
   },
 };
 
-/**
- * 🔧 Dev mode storage - אחסון מצב פיתוח
- */
-export const devModeStorage = {
-  // Check if dev mode is enabled - בדיקה אם מצב פיתוח מופעל
-  isDevModeEnabled: async () => {
-    return getFromStorage<boolean>(STORAGE_KEYS.DEV_MODE_ENABLED) || false;
-  },
-
-  // Enable dev mode - הפעלת מצב פיתוח
-  enableDevMode: async () => {
-    return saveToStorage(STORAGE_KEYS.DEV_MODE_ENABLED, true);
-  },
-
-  // Disable dev mode - כיבוי מצב פיתוח
-  disableDevMode: async () => {
-    return saveToStorage(STORAGE_KEYS.DEV_MODE_ENABLED, false);
-  },
-
-  // Track dev mode taps - מעקב אחר לחיצות למצב פיתוח
-  trackDevModeTap: async () => {
-    const taps = (await getFromStorage<{ count: number; lastTap: number }>(
-      STORAGE_KEYS.DEV_MODE_TAPS
-    )) || { count: 0, lastTap: 0 };
-
-    const now = Date.now();
-
-    // Reset if more than 500ms passed - איפוס אם עברו יותר מ-500ms
-    if (now - taps.lastTap > 500) {
-      taps.count = 1;
-    } else {
-      taps.count++;
-    }
-
-    taps.lastTap = now;
-
-    await saveToStorage(STORAGE_KEYS.DEV_MODE_TAPS, taps);
-
-    return taps.count;
-  },
-
-  // Reset dev mode taps - איפוס לחיצות מצב פיתוח
-  resetDevModeTaps: async () => {
-    return removeFromStorage(STORAGE_KEYS.DEV_MODE_TAPS);
-  },
-};
-
-// 🚀 Initialize storage - אתחול אחסון
-export const initializeStorage = async () => {
+// 🧹 Clear all data - ניקוי כל הנתונים
+export async function clearAllData() {
   try {
-    // Clear expired cache on app start - ניקוי מטמון שפג תוקפו בהפעלת האפליקציה
-    await cacheStorage.clearExpiredCache();
-
-    // Check if first launch - בדיקה אם זו הפעלה ראשונה
-    const isFirst = await settingsStorage.isFirstLaunch();
-
-    if (isFirst) {
-      // Set default settings - הגדרת ברירות מחדל
-      await settingsStorage.saveLanguage("he");
-      await settingsStorage.saveTheme("dark");
-    }
-
-    console.log("✅ Storage initialized successfully");
-    return true;
+    const keys = Object.values(STORAGE_KEYS);
+    await AsyncStorage.multiRemove(keys);
+    console.log("All data cleared successfully");
   } catch (error) {
-    console.error("❌ Error initializing storage:", error);
-    return false;
+    console.error("Error clearing all data:", error);
+    throw error;
   }
+}
+
+// 🔄 Export/Import utilities - כלי ייצוא/ייבוא
+export const dataTransfer = {
+  async exportAll() {
+    try {
+      const keys = Object.values(STORAGE_KEYS);
+      const data: Record<string, any> = {};
+
+      for (const key of keys) {
+        const value = await AsyncStorage.getItem(key);
+        if (value) {
+          data[key] = JSON.parse(value);
+        }
+      }
+
+      return {
+        version: "1.0",
+        exportDate: new Date().toISOString(),
+        data,
+      };
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      throw error;
+    }
+  },
+
+  async importAll(exportData: any) {
+    try {
+      if (!exportData.version || !exportData.data) {
+        throw new Error("Invalid export data format");
+      }
+
+      const entries = Object.entries(exportData.data).map(([key, value]) => [
+        key,
+        JSON.stringify(value),
+      ]);
+
+      await AsyncStorage.multiSet(entries as [string, string][]);
+      console.log("Data imported successfully");
+    } catch (error) {
+      console.error("Error importing data:", error);
+      throw error;
+    }
+  },
 };
