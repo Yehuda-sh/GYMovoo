@@ -1,6 +1,6 @@
 /**
  * @file screens/welcome/components/DevPanel.tsx
- * @description פאנל פיתוח להתחברות מהירה עם משתמשי דמו
+ * @description פאנל פיתוח נסתר למסך Welcome
  * @author GYMoveo Development
  * @version 1.0.0
  *
@@ -8,167 +8,142 @@
  * @parent WelcomeScreen
  *
  * @notes
- * - רשימת משתמשי דמו לבדיקות
- * - אפשרות לאיפוס כל הנתונים
  * - נגיש רק במצב פיתוח
- * - מיון משתמשים לפי רמה
+ * - מאפשר כניסה מהירה כמשתמשי דמו
+ * - מאפשר איפוס נתונים
  *
  * @changelog
- * - v1.0.0: Initial creation
+ * - v1.0.0: Initial component creation
  */
 
-import { theme } from "@/styles/theme";
-import React, { memo, useCallback, useMemo, useState } from "react";
+import React, { memo } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  Vibration,
   View,
 } from "react-native";
-import DemoUserCard from "./DemoUserCard";
 
-const { colors, spacing, fontSizes, fontWeights, borderRadius, shadows } =
+import theme from "@/styles/theme";
+
+const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
   theme;
 
-interface DevPanelProps {
-  visible: boolean;
-  demoUsers: any[];
-  onDemoLogin: (user: any) => void;
-  onResetData: () => void;
+interface DemoUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  level?: string;
+  goal?: string;
+  isDemo: boolean;
 }
 
-export const DevPanel: React.FC<DevPanelProps> = memo(
-  ({ visible, demoUsers, onDemoLogin, onResetData }) => {
-    // מצב טעינה לפעולות
-    const [isResetting, setIsResetting] = useState(false);
-    const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
+interface DevPanelProps {
+  demoUsers: DemoUser[];
+  onSelectUser: (userId: string) => void;
+  onResetData: () => void;
+  isLoading?: boolean;
+}
 
-    // מיון משתמשי דמו לפי רמה
-    const sortedUsers = useMemo(() => {
-      const levelOrder = { beginner: 0, intermediate: 1, advanced: 2 };
-      return [...demoUsers].sort((a, b) => {
-        const aLevel = levelOrder[a.level as keyof typeof levelOrder] ?? 3;
-        const bLevel = levelOrder[b.level as keyof typeof levelOrder] ?? 3;
-        return aLevel - bLevel;
-      });
-    }, [demoUsers]);
-
-    // פונקציה משופרת לכניסה עם משתמש דמו
-    const handleDemoLogin = useCallback(
-      async (user: any) => {
-        try {
-          setLoadingUserId(user.id);
-          // רטט קל לפידבק
-          if (Platform.OS !== "web") {
-            Vibration.vibrate(10);
-          }
-          await onDemoLogin(user);
-        } catch {
-          Alert.alert("שגיאה", "לא ניתן להתחבר עם משתמש זה");
-        } finally {
-          setLoadingUserId(null);
-        }
-      },
-      [onDemoLogin]
+const DevPanel = memo(
+  ({
+    demoUsers,
+    onSelectUser,
+    onResetData,
+    isLoading = false,
+  }: DevPanelProps) => {
+    const renderDemoUserCard = (user: DemoUser) => (
+      <TouchableOpacity
+        key={user.id}
+        style={[styles.userCard, isLoading && styles.userCardDisabled]}
+        onPress={() => !isLoading && onSelectUser(user.id)}
+        disabled={isLoading}
+      >
+        {isLoading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="small" color={colors.primary[500]} />
+          </View>
+        )}
+        <View style={styles.userAvatar}>
+          <Text style={styles.userAvatarText}>
+            {user.avatar || user.name.charAt(0)}
+          </Text>
+        </View>
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{user.name}</Text>
+          <Text style={styles.userEmail}>{user.email}</Text>
+          <Text style={styles.userMeta}>
+            {user.level} • {user.goal}
+          </Text>
+        </View>
+      </TouchableOpacity>
     );
 
-    // פונקציה משופרת לאיפוס נתונים עם אישור
-    const handleResetData = useCallback(() => {
-      Alert.alert(
-        "⚠️ אזהרה",
-        "פעולה זו תמחק את כל הנתונים המקומיים. האם אתה בטוח?",
-        [
-          { text: "ביטול", style: "cancel" },
-          {
-            text: "מחק הכל",
-            style: "destructive",
-            onPress: async () => {
-              setIsResetting(true);
-              try {
-                await onResetData();
-                Alert.alert("✅ הצלחה", "כל הנתונים נמחקו בהצלחה");
-              } catch {
-                Alert.alert("שגיאה", "לא ניתן למחוק את הנתונים");
-              } finally {
-                setIsResetting(false);
-              }
-            },
-          },
-        ],
-        { cancelable: true }
-      );
-    }, [onResetData]);
-
-    if (!visible) return null;
-
     return (
-      <View style={styles.devPanel} testID="dev-panel">
-        {/* כותרת עם אנימציה */}
+      <View style={styles.devPanel}>
+        {/* Header */}
         <View style={styles.devHeader}>
-          <View style={[styles.devIndicator, styles.pulsingIndicator]} />
+          <View style={styles.devIndicator} />
           <Text style={styles.devTitle}>DEV MODE</Text>
-          <Text style={styles.devVersion}>v2.0</Text>
+          <Text style={styles.devVersion}>v1.0.0</Text>
         </View>
 
-        {/* סטטיסטיקות */}
+        {/* Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{demoUsers.length}</Text>
-            <Text style={styles.statLabel}>משתמשים</Text>
+            <Text style={styles.statLabel}>משתמשי דמו</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>3</Text>
-            <Text style={styles.statLabel}>רמות</Text>
+            <Text style={styles.statValue}>100+</Text>
+            <Text style={styles.statLabel}>תרגילים</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>50+</Text>
+            <Text style={styles.statLabel}>תוכניות</Text>
           </View>
         </View>
 
-        <Text style={styles.demoSectionTitle}>בחר משתמש לבדיקה</Text>
-
-        {/* רשימת משתמשים עם גלילה */}
+        {/* Demo Users */}
+        <Text style={styles.demoSectionTitle}>בחר משתמש דמו</Text>
         <ScrollView
           style={styles.usersScrollView}
-          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.usersScrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          {sortedUsers.map((user) => (
-            <View key={user.id} style={styles.userCardWrapper}>
-              {loadingUserId === user.id && (
-                <View style={styles.loadingOverlay}>
-                  <ActivityIndicator size="small" color={colors.primary[600]} />
-                </View>
-              )}
-              <TouchableOpacity
-                disabled={loadingUserId !== null}
-                onPress={() => handleDemoLogin(user)}
-                activeOpacity={0.7}
-              >
-                <DemoUserCard
-                  user={user}
-                  onPress={() => {}} // DemoUserCard מטפל בעיצוב בלבד
-                />
-              </TouchableOpacity>
-            </View>
-          ))}
+          {demoUsers.map(renderDemoUserCard)}
         </ScrollView>
 
-        {/* כפתורי פעולה */}
+        {/* Actions */}
         <View style={styles.actionsContainer}>
           <TouchableOpacity
             style={[
               styles.resetButton,
-              isResetting && styles.resetButtonDisabled,
+              isLoading && styles.resetButtonDisabled,
             ]}
-            onPress={handleResetData}
-            disabled={isResetting}
-            activeOpacity={0.7}
+            onPress={() => {
+              Alert.alert(
+                "🗑️ איפוס נתונים",
+                "האם אתה בטוח שברצונך למחוק את כל הנתונים?",
+                [
+                  { text: "ביטול", style: "cancel" },
+                  {
+                    text: "מחק",
+                    style: "destructive",
+                    onPress: onResetData,
+                  },
+                ]
+              );
+            }}
+            disabled={isLoading}
           >
-            {isResetting ? (
+            {isLoading ? (
               <ActivityIndicator size="small" color={colors.light[50]} />
             ) : (
               <>
@@ -273,6 +248,50 @@ const styles = StyleSheet.create({
   },
   userCardWrapper: {
     position: "relative",
+  },
+  userCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.dark[600],
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.dark[500],
+  },
+  userCardDisabled: {
+    opacity: 0.6,
+  },
+  userAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary[500],
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: spacing.md,
+  },
+  userAvatarText: {
+    fontSize: fontSizes.md,
+    fontWeight: fontWeights.bold,
+    color: colors.light[50],
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: fontSizes.sm,
+    fontWeight: fontWeights.semiBold,
+    color: colors.light[50],
+  },
+  userEmail: {
+    fontSize: fontSizes.xs,
+    color: colors.light[500],
+  },
+  userMeta: {
+    fontSize: fontSizes.xxs,
+    color: colors.light[600],
+    marginTop: 2,
   },
   loadingOverlay: {
     position: "absolute",

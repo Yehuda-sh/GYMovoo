@@ -1,21 +1,14 @@
 /**
  * @file screens/welcome/styles/index.ts
- * @description ייצוא מרכזי של סטיילים למסך Welcome
+ * @description ייצוא מרכזי של סגנונות מסך Welcome
  * @author GYMoveo Development
  * @version 1.0.0
  *
  * @notes
- * - ייצוא כל הסטיילים הנדרשים למסך Welcome
- * - כולל סטיילים ראשיים וסטיילים למודל Dev
+ * - ייצוא כל הסגנונות הנדרשים למסך Welcome
  *
  * @changelog
  * - v1.0.0: Initial creation
  */
 
-export {
-  devModalStyles,
-  platformStyles,
-  responsive,
-  spacing,
-  styles,
-} from "./welcomeStyles";
+export * from "./welcomeStyles";

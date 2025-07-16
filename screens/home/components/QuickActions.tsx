@@ -70,7 +70,7 @@ const quickActions: QuickAction[] = [
     title: "מאגר תרגילים",
     subtitle: "חפש תרגילים",
     icon: "search",
-    colors: [colors.success[500], colors.success[600]],
+    colors: [colors.status.success[500], colors.status.success[600]],
     route: "/exercises",
   },
   {
@@ -78,7 +78,7 @@ const quickActions: QuickAction[] = [
     title: "תזונה",
     subtitle: "מעקב קלוריות",
     icon: "nutrition",
-    colors: [colors.warning[500], colors.warning[600]],
+    colors: [colors.status.warning[500], colors.status.warning[600]],
     route: "/nutrition",
     requiresAuth: true,
   },
@@ -87,7 +87,7 @@ const quickActions: QuickAction[] = [
     title: "אתגרים",
     subtitle: "הצטרף לאתגר",
     icon: "trophy",
-    colors: [colors.error[500], colors.error[600]],
+    colors: [colors.status.error[500], colors.status.error[600]],
     route: "/challenges",
   },
   {
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSizes.xl,
     fontWeight: fontWeights.bold,
-    color: colors.gray[900],
+    color: colors.dark[900],
   },
   moreButton: {
     flexDirection: "row",

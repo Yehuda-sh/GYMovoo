@@ -24,7 +24,6 @@ import {
   Alert,
   Animated,
   Modal,
-  Platform,
   StatusBar,
   Text,
   TouchableOpacity,
@@ -59,279 +58,177 @@ interface DemoUserForPanel {
   avatar?: string;
   level?: string;
   goal?: string;
+  isDemo: boolean;
 }
 
-const WelcomeScreen = () => {
-  // 🏪 Store hooks
-  const { becomeGuest, loginAsDemoUser } = useUserStore();
+export default function WelcomeScreen() {
+  // 🏪 Store
+  const { setUser } = useUserStore();
 
-  // 🔒 State לDev Mode מוסתר
-  const [logoTapCount, setLogoTapCount] = useState(0);
-  const [showDevModal, setShowDevModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // 📊 State
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDevMode, setIsDevMode] = useState(false);
+  const [devClickCount, setDevClickCount] = useState(0);
 
-  // 🎨 אנימציות למודל Dev
-  const modalOpacity = useRef(new Animated.Value(0)).current;
-  const modalScale = useRef(new Animated.Value(0.8)).current;
-
-  // 🎨 אנימציות רגילות
-  const { fadeAnim, logoScale, titleSlide, subtitleSlide, buttonsSlide } =
+  // 🎨 Animations
+  const { fadeAnim, slideAnim, scaleAnim, startAnimations } =
     useWelcomeAnimations();
 
-  // 🎯 טיפול ב-3 לחיצות על הלוגו למצב פיתוח
-  const handleLogoPress = useCallback(() => {
-    if (!__DEV__) return;
+  // 📱 Refs
+  const devTimerRef = useRef<NodeJS.Timeout>();
 
-    const newCount = logoTapCount + 1;
-    setLogoTapCount(newCount);
-
-    if (newCount >= 3) {
-      setShowDevModal(true);
-      setLogoTapCount(0);
-
-      // אנימציית פתיחת מודל
-      Animated.parallel([
-        Animated.timing(modalOpacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(modalScale, {
-          toValue: 1,
-          tension: 100,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-
-    // איפוס ספירה אחרי שנייה
-    if (tapTimeoutRef.current) {
-      clearTimeout(tapTimeoutRef.current);
-    }
-
-    tapTimeoutRef.current = setTimeout(() => {
-      setLogoTapCount(0);
-    }, 1000);
-  }, [logoTapCount, modalOpacity, modalScale]);
-
-  // 🔒 סגירת מודל Dev
-  const closeDevModal = useCallback(() => {
-    Animated.parallel([
-      Animated.timing(modalOpacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(modalScale, {
-        toValue: 0.8,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setShowDevModal(false);
-    });
-  }, [modalOpacity, modalScale]);
-
-  // 🏃 התחברות כאורח
-  const handleGuestLogin = useCallback(() => {
-    setLoading(true);
-    setTimeout(() => {
-      becomeGuest();
-      router.replace("/(tabs)/home");
-      setLoading(false);
-    }, 300);
-  }, [becomeGuest]);
-
-  // 👨‍💻 התחברות כמשתמש דמו
-  const handleDemoLogin = useCallback(
-    async (demoUser: any) => {
-      setLoading(true);
-      setShowDevModal(false);
-
-      try {
-        const user = createDemoUser(demoUser);
-        await loginAsDemoUser(user);
-        router.replace("/(tabs)/home");
-      } catch (err) {
-        Alert.alert("שגיאה", "לא ניתן להתחבר כמשתמש דמו");
-      } finally {
-        setLoading(false);
+  // 🏁 Initialize animations
+  React.useEffect(() => {
+    startAnimations();
+    return () => {
+      if (devTimerRef.current) {
+        clearTimeout(devTimerRef.current);
       }
+    };
+  }, [startAnimations]);
+
+  // 👤 Handle guest login
+  const handleGuestLogin = useCallback(() => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setUser(null);
+      router.replace("/home");
+    }, 800);
+  }, [setUser]);
+
+  // 🔑 Handle demo user login
+  const handleDemoUserLogin = useCallback(
+    (demoUserId: string) => {
+      const demoUser = demoUsers.find((u) => u.id === demoUserId);
+      if (!demoUser) return;
+
+      setIsLoading(true);
+      setTimeout(() => {
+        const user = createDemoUser(demoUser);
+        setUser(user);
+        router.replace("/home");
+        setIsDevMode(false);
+      }, 800);
     },
-    [loginAsDemoUser]
+    [setUser]
   );
 
-  // 🗑️ איפוס נתונים
+  // 🛠️ Handle dev mode toggle
+  const handleLogoPress = useCallback(() => {
+    const newCount = devClickCount + 1;
+    setDevClickCount(newCount);
+
+    if (devTimerRef.current) {
+      clearTimeout(devTimerRef.current);
+    }
+
+    if (newCount === 3) {
+      setIsDevMode(true);
+      setDevClickCount(0);
+    } else {
+      devTimerRef.current = setTimeout(() => {
+        setDevClickCount(0);
+      }, 2000);
+    }
+  }, [devClickCount]);
+
+  // 🗑️ Handle data reset
   const handleResetData = useCallback(async () => {
-    Alert.alert("איפוס נתונים", "האם אתה בטוח?", [
-      { text: "ביטול", style: "cancel" },
-      {
-        text: "אפס הכל",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await clearAllData();
-            Alert.alert("✅", "כל הנתונים אופסו בהצלחה");
-          } catch (err) {
-            Alert.alert("שגיאה", "לא ניתן לאפס נתונים");
-          }
-        },
-      },
-    ]);
-  }, []);
-
-  // 🔑 התחברות רגילה
-  const handleLogin = useCallback(() => {
-    router.push("/login");
-  }, []);
-
-  // 📝 הרשמה
-  const handleSignup = useCallback(() => {
-    router.push("/signup");
-  }, []);
-
-  // 🔐 Google Login עם Supabase
-  const handleGoogleLogin = useCallback(async () => {
     try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: "gymovo://auth-callback",
-        },
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      Alert.alert("שגיאה בהתחברות", error.message);
-    } finally {
-      setLoading(false);
+      setIsLoading(true);
+      await clearAllData();
+      await supabase.auth.signOut();
+      Alert.alert("✅ הצלחה", "כל הנתונים נמחקו בהצלחה");
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Reset error:", error);
+      Alert.alert("❌ שגיאה", "אירעה שגיאה במחיקת הנתונים");
+      setIsLoading(false);
     }
   }, []);
 
-  // 🍎 Apple Login עם Supabase
-  const handleAppleLogin = useCallback(async () => {
-    if (Platform.OS !== "ios") {
-      Alert.alert("זמין רק ב-iOS", "התחברות עם Apple זמינה רק במכשירי iOS");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "apple",
-        options: {
-          redirectTo: "gymovo://auth-callback",
-        },
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      Alert.alert("שגיאה בהתחברות", error.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // המרת demoUsers לפורמט המתאים ל-DevPanel
-  const demoUsersForPanel: DemoUserForPanel[] = demoUsers.map((user: any) => ({
+  // Convert demo users for the panel
+  const demoUsersForPanel: DemoUserForPanel[] = demoUsers.map((user) => ({
     id: user.id,
     name: user.name,
     email: user.email,
-    avatar: user.avatarUrl || user.avatar,
-    level: user.demographics?.experienceLevel || user.level,
-    goal: user.demographics?.primaryGoal || user.goal,
+    avatar: user.avatar,
+    level: user.level,
+    goal: user.fitnessGoal,
+    isDemo: true,
   }));
 
   return (
     <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="transparent"
-        translucent
-      />
+      <StatusBar barStyle="light-content" />
 
-      {/* רקע גרדיאנט */}
-      <BackgroundGradient visible={true} />
+      {/* 🌈 Background gradient */}
+      <BackgroundGradient />
 
-      {/* תוכן ראשי */}
-      <View style={styles.content}>
-        {/* סקציית הירו עם לוגו */}
-        <HeroSection
-          fadeAnim={fadeAnim}
-          logoScale={logoScale}
-          titleSlide={titleSlide}
-          subtitleSlide={subtitleSlide}
-          onLogoPress={handleLogoPress}
-        />
-
-        {/* כפתורי פעולה ראשיים */}
-        <ActionButtons
-          buttonsSlide={buttonsSlide}
-          onLogin={handleLogin}
-          onSignup={handleSignup}
-          fadeAnim={fadeAnim}
-        />
-
-        {/* כפתורי רשתות חברתיות */}
-        <SocialLoginButtons
-          onGoogleLogin={handleGoogleLogin}
-          onAppleLogin={handleAppleLogin}
-          fadeAnim={fadeAnim}
-          loading={loading}
-        />
-
-        {/* כפתור אורח */}
-        <GuestButton onGuestLogin={handleGuestLogin} />
-      </View>
-
-      {/* 🔒 Dev Modal */}
-      <Modal
-        visible={showDevModal}
-        transparent={true}
-        animationType="none"
-        onRequestClose={closeDevModal}
+      {/* 📱 Main content */}
+      <Animated.View
+        style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
       >
-        <TouchableOpacity
-          style={devModalStyles.overlay}
-          activeOpacity={1}
-          onPress={closeDevModal}
-        >
-          <Animated.View
-            style={[
-              devModalStyles.modalContainer,
-              {
-                opacity: modalOpacity,
-                transform: [{ scale: modalScale }],
-              },
-            ]}
-          >
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={(e) => e.stopPropagation()}
-              style={devModalStyles.modalContent}
+        {/* 🏆 Hero section */}
+        <HeroSection onLogoPress={handleLogoPress} scaleAnim={scaleAnim} />
+
+        {/* 🎬 Action buttons */}
+        <ActionButtons />
+
+        {/* 🌐 Social login */}
+        <SocialLoginButtons />
+
+        {/* 👤 Guest button */}
+        <GuestButton onPress={handleGuestLogin} isLoading={isLoading} />
+      </Animated.View>
+
+      {/* 🛠️ Dev mode modal */}
+      <Modal
+        visible={isDevMode}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsDevMode(false)}
+      >
+        <View style={devModalStyles.overlay}>
+          <View style={devModalStyles.modalContainer}>
+            <Animated.View
+              style={[
+                devModalStyles.modalContent,
+                {
+                  transform: [
+                    {
+                      scale: scaleAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.8, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
             >
               <TouchableOpacity
                 style={devModalStyles.closeButton}
-                onPress={closeDevModal}
+                onPress={() => setIsDevMode(false)}
               >
                 <Text style={devModalStyles.closeButtonText}>✕</Text>
               </TouchableOpacity>
 
               <DevPanel
-                visible={true}
-                demoUsers={demoUsersForPanel as any}
-                onDemoLogin={handleDemoLogin}
+                demoUsers={demoUsersForPanel}
+                onSelectUser={handleDemoUserLogin}
                 onResetData={handleResetData}
+                isLoading={isLoading}
               />
-            </TouchableOpacity>
-          </Animated.View>
-        </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </View>
       </Modal>
     </View>
   );
-};
-
-export default WelcomeScreen;
+}

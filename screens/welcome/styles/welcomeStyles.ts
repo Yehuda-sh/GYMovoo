@@ -1,125 +1,64 @@
 /**
  * @file screens/welcome/styles/welcomeStyles.ts
- * @description סטיילים ראשיים למסך Welcome
+ * @description סגנונות עבור מסך Welcome
  * @author GYMoveo Development
  * @version 1.0.0
  *
  * @notes
- * - סטיילים מותאמים למכשירים שונים
- * - תמיכה במסכים קטנים וגדולים
- * - סטיילים למודל Dev
+ * - סגנונות מותאמים למסכים שונים
+ * - תמיכה ב-RTL
+ * - אנימציות וצללים
  *
  * @changelog
  * - v1.0.0: Initial creation
  */
 
-import { theme } from "@/styles/theme";
 import { Dimensions, Platform, StyleSheet } from "react-native";
 
-const { colors, spacing, fontSizes, fontWeights, borderRadius, shadows } =
+import theme from "@/styles/theme";
+
+const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
   theme;
 
-const { width, height } = Dimensions.get("window");
-const isSmallDevice = height < 700;
-const isTinyDevice = height < 600;
-const isWideScreen = width > 768;
-const isIOS = Platform.OS === "ios";
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
-// Responsive values helper
-export const responsive = (small: number, normal: number, tiny?: number) => {
-  if (tiny !== undefined && isTinyDevice) return tiny;
-  return isSmallDevice ? small : normal;
+// Platform checks
+const isIOS = Platform.OS === "ios";
+const isSmallDevice = screenHeight < 700;
+const isTinyDevice = screenHeight < 600;
+const isWideScreen = screenWidth > 768;
+
+// Responsive helper
+const responsive = (small: number, medium: number, large: number) => {
+  if (isTinyDevice) return small;
+  if (isSmallDevice) return medium;
+  return large;
 };
 
+// Main Welcome Screen Styles
 export const styles = StyleSheet.create({
-  // Main containers
   container: {
     flex: 1,
     backgroundColor: colors.dark[900],
   },
+
   content: {
     flex: 1,
-    justifyContent: isSmallDevice ? "space-between" : "center",
-    alignItems: "center",
-    paddingTop: responsive(40, 60, 30),
-    paddingBottom: responsive(80, 100, 60),
-    paddingHorizontal: spacing.xl,
-  },
-
-  // Safe area adjustments
-  safeArea: {
-    flex: 1,
-  },
-
-  // Scroll container for very small devices
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingVertical: spacing.xxxl,
-  },
-
-  // Background and overlays
-  backgroundGradient: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    height: "100%",
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-  },
-
-  // Logo section
-  logoSection: {
-    alignItems: "center",
-    marginBottom: responsive(spacing.xl, spacing.xxxl),
-  },
-  logoContainer: {
-    marginBottom: responsive(20, 30, 15),
     alignItems: "center",
     justifyContent: "center",
-  },
-  logoWrapper: {
-    width: responsive(80, 100, 70),
-    height: responsive(80, 100, 70),
-    borderRadius: borderRadius.full,
-    overflow: "hidden",
-  },
-  logoGlow: {
-    position: "absolute",
-    width: responsive(120, 150, 100),
-    height: responsive(120, 150, 100),
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primary[600],
-    opacity: 0.2,
-    transform: [{ scale: 1.5 }],
+    paddingHorizontal: spacing.xl,
+    zIndex: 1,
   },
 
-  // Text styles
-  title: {
-    fontSize: responsive(28, 32, 24),
-    fontWeight: fontWeights.bold,
-    color: colors.light[50],
-    textAlign: "center",
-    marginBottom: spacing.sm,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: responsive(16, 18, 14),
-    color: colors.light[300],
-    textAlign: "center",
-    lineHeight: responsive(22, 26, 20),
-    paddingHorizontal: spacing.xl,
+  // Hero section styles
+  heroContainer: {
+    alignItems: "center",
+    marginBottom: responsive(spacing.xl, spacing.xxl, spacing.xxxl),
   },
 
-  // Actions section
-  actionsContainer: {
-    width: "100%",
-    paddingHorizontal: spacing.xl,
-    marginTop: responsive(10, 20),
-    maxWidth: isWideScreen ? 400 : "100%",
+  // Action buttons container
+  buttonsContainer: {
+    width: isWideScreen ? 400 : "100%",
     alignSelf: "center",
   },
 

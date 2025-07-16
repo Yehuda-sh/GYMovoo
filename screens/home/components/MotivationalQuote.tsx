@@ -185,12 +185,11 @@ const MotivationalQuote = memo(() => {
     const colorMap = {
       motivation: [colors.primary[500], colors.primary[600]] as const,
       success: [colors.secondary[500], colors.secondary[600]] as const,
-      fitness: [colors.success[500], colors.success[600]] as const,
-      perseverance: [colors.warning[500], colors.warning[600]] as const,
+      fitness: [colors.status.success, colors.status.successDark] as const,
+      perseverance: [colors.status.warning, colors.status.warningDark] as const,
     };
     return colorMap[category as keyof typeof colorMap] || colorMap.motivation;
   };
-
   return (
     <Animated.View
       style={[
@@ -234,7 +233,7 @@ const MotivationalQuote = memo(() => {
               <Ionicons
                 name={isLiked ? "heart" : "heart-outline"}
                 size={24}
-                color={isLiked ? colors.error[400] : colors.light[50]}
+                color={isLiked ? colors.status.error[400] : colors.light[50]}
               />
             </Animated.View>
           </TouchableOpacity>

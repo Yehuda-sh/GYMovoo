@@ -9,8 +9,8 @@
  *
  * @notes
  * - מציג 4 סטטיסטיקות עיקריות
- * - אנימציות ספירה
- * - תמיכה במצב אורח
+ * - אנימציות ספירה למספרים
+ * - תמיכה במצב אורח/דמו
  *
  * @changelog
  * - v1.0.0: Initial component creation
@@ -28,17 +28,9 @@ import {
 } from "react-native";
 
 import theme from "@/styles/theme";
+
 const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
   theme;
-
-interface QuickStatProps {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  value: number | string;
-  unit?: string;
-  color: string;
-  onPress?: () => void;
-}
 
 interface QuickStatsProps {
   stats: {
@@ -49,28 +41,40 @@ interface QuickStatsProps {
   };
 }
 
+interface QuickStatProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: number;
+  unit?: string;
+  color: string;
+  onPress: () => void;
+}
+
 const QuickStatCard = memo(
   ({ icon, label, value, unit, color, onPress }: QuickStatProps) => {
     const animatedValue = useRef(new Animated.Value(0)).current;
-    const scaleAnim = useRef(new Animated.Value(1)).current;
+    const scaleAnim = useRef(new Animated.Value(0)).current;
 
-    // אנימציית ספירה
     useEffect(() => {
-      if (typeof value === "number") {
+      // אנימציית כניסה
+      Animated.parallel([
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
         Animated.timing(animatedValue, {
           toValue: value,
           duration: 1000,
           useNativeDriver: false,
-        }).start();
-      }
+        }),
+      ]).start();
     }, [value]);
 
-    // אנימציית לחיצה
     const handlePressIn = () => {
       Animated.spring(scaleAnim, {
         toValue: 0.95,
         friction: 4,
-        tension: 300,
         useNativeDriver: true,
       }).start();
     };
@@ -79,7 +83,6 @@ const QuickStatCard = memo(
       Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 4,
-        tension: 300,
         useNativeDriver: true,
       }).start();
     };
@@ -90,7 +93,7 @@ const QuickStatCard = memo(
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        activeOpacity={0.9}
+        activeOpacity={0.8}
       >
         <Animated.View
           style={[styles.statContent, { transform: [{ scale: scaleAnim }] }]}
@@ -100,10 +103,9 @@ const QuickStatCard = memo(
           >
             <Ionicons name={icon} size={24} color={color} />
           </View>
-
           <View style={styles.textContainer}>
             <View style={styles.valueRow}>
-              {typeof value === "number" ? (
+              {value > 0 ? (
                 <Animated.Text style={styles.statValue}>
                   {
                     animatedValue
@@ -155,21 +157,21 @@ const QuickStats = memo(({ stats }: QuickStatsProps) => {
       label: "רצף נוכחי",
       value: stats.currentStreak,
       unit: "ימים",
-      color: colors.error[500],
+      color: colors.status.error,
       onPress: () => router.push("/progress"),
     },
     {
       icon: "time",
       label: "דקות החודש",
       value: stats.minutesThisMonth,
-      color: colors.success[500],
+      color: colors.status.success,
       onPress: () => router.push("/progress"),
     },
     {
       icon: "trophy",
       label: "שיאים אישיים",
       value: stats.personalRecords,
-      color: colors.warning[500],
+      color: colors.status.warning,
       onPress: () => router.push("/progress"),
     },
   ];
@@ -216,7 +218,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSizes.xl,
     fontWeight: fontWeights.bold,
-    color: colors.gray[900],
+    color: colors.dark[900],
   },
   viewAllButton: {
     flexDirection: "row",
@@ -263,16 +265,16 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: fontSizes.xxl,
     fontWeight: fontWeights.bold,
-    color: colors.gray[900],
+    color: colors.dark[900],
   },
   statUnit: {
     fontSize: fontSizes.sm,
-    color: colors.gray[600],
+    color: colors.dark[600],
     fontWeight: fontWeights.regular,
   },
   statLabel: {
     fontSize: fontSizes.sm,
-    color: colors.gray[600],
+    color: colors.dark[600],
     marginTop: spacing.xs,
   },
 });
