@@ -2,7 +2,7 @@
  * @file screens/home/HomeScreen.tsx
  * @description מסך הבית הראשי של האפליקציה
  * @author GYMoveo Development
- * @version 1.0.1
+ * @version 1.0.2
  *
  * @component HomeScreen
  * @parent App
@@ -11,11 +11,12 @@
  * - מסך ראשי לאחר התחברות/כניסת אורח
  * - מרכז את כל הקומפוננטות של מסך הבית
  * - תומך ברענון pull-to-refresh
- * - תוקן: צבעי gray ו-error
+ * - תוקן: כל בעיות הצבעים והייבואים
  *
  * @changelog
  * - v1.0.0: Initial screen creation
  * - v1.0.1: Fixed color references
+ * - v1.0.2: Fixed all color and import issues
  */
 
 import { Ionicons } from "@expo/vector-icons";
@@ -37,6 +38,8 @@ import {
   useUser,
   useUserStore,
 } from "@/lib/stores/userStore";
+import theme from "@/styles/theme";
+
 import {
   MotivationalQuote,
   QuickActions,
@@ -44,8 +47,7 @@ import {
   RecentActivity,
   TodayWorkout,
   WelcomeHeader,
-} from "@/screens/home/components";
-import theme from "@/styles/theme";
+} from "./components";
 
 const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
   theme;
@@ -92,8 +94,8 @@ const HomeScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary[500]}
-            colors={[colors.primary[500]]}
+            tintColor={colors.primary[600]}
+            colors={[colors.primary[600]]}
           />
         }
       >
@@ -102,7 +104,7 @@ const HomeScreen = () => {
           userName={user?.name || "משתמש"}
           isGuest={isGuest}
           isDemo={isDemo}
-          onProfilePress={() => router.push("/")} // זמנית - מוביל למסך הבית
+          onProfilePress={() => router.push("/profile")}
         />
 
         {/* 📊 Quick stats */}
@@ -138,7 +140,7 @@ const HomeScreen = () => {
               <Ionicons
                 name="log-out-outline"
                 size={20}
-                color={colors.status.error[500]}
+                color={colors.status.error}
               />
               <Text style={styles.signOutText}>התנתק</Text>
             </TouchableOpacity>
@@ -174,13 +176,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.status.error[200],
+    borderColor: colors.light[300],
     ...shadows.sm,
   },
   signOutText: {
     fontSize: fontSizes.md,
     fontWeight: fontWeights.medium,
-    color: colors.status.error[500],
+    color: colors.status.error,
   },
 });
 

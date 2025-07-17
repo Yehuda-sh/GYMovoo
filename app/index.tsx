@@ -1,6 +1,7 @@
 import { Redirect } from "expo-router";
 
 export default function Index() {
-  // Redirect to welcome screen on app launch
+  // בינתיים מפנה ישירות ל-welcome
+  // בעתיד נבדוק אם המשתמש מחובר
   return <Redirect href="/(auth)/welcome" />;
 }

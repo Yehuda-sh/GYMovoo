@@ -1,6 +1,2 @@
-// app/(auth)/welcome.tsx
-import WelcomeScreen from "@/screens/welcome/WelcomeScreen";
-
-export default function WelcomePage() {
-  return <WelcomeScreen />;
-}
+// פשוט מייצא את המסך הקיים
+export { default } from "@/screens/welcome/WelcomeScreen";

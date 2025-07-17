@@ -148,5 +148,3 @@ git push origin main
 - Solid foundation for the rest of the app
 
 🎉 **HomeScreen is 100% Complete and Working!** 🎉
-
--

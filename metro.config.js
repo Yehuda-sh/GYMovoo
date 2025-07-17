@@ -13,3 +13,6 @@ config.resolver.blockList = [
 ];
 
 module.exports = config;
+
+// אם עדיין יש בעיות, הוסף את זה בסוף constants/demoUsers.ts:
+// export default null;

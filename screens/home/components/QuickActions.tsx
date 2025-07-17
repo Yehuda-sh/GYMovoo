@@ -2,7 +2,7 @@
  * @file screens/home/components/QuickActions.tsx
  * @description קומפוננטה לפעולות מהירות במסך הבית
  * @author GYMoveo Development
- * @version 1.0.2
+ * @version 1.0.3
  *
  * @component QuickActions
  * @parent HomeScreen
@@ -11,12 +11,13 @@
  * - כפתורי גישה מהירה לפעולות נפוצות
  * - אנימציות לחיצה
  * - תמיכה במצב אורח
- * - זמנית: כל הנתיבים מובילים למסך הבית
+ * - תוקן: כל בעיות הצבעים
  *
  * @changelog
  * - v1.0.0: Initial component creation
  * - v1.0.1: Fixed TypeScript errors and router navigation
  * - v1.0.2: Fixed theme import to use default export
+ * - v1.0.3: Fixed all color references
  */
 
 import { Ionicons } from "@expo/vector-icons";
@@ -58,7 +59,7 @@ const quickActions: QuickAction[] = [
     subtitle: "התחל אימון",
     icon: "add-circle",
     colors: [colors.primary[500], colors.primary[600]],
-    route: "/workouts-new",
+    route: "/workouts/new",
   },
   {
     id: "my-programs",
@@ -74,7 +75,7 @@ const quickActions: QuickAction[] = [
     title: "מאגר תרגילים",
     subtitle: "חפש תרגילים",
     icon: "search",
-    colors: [colors.status.success[500], colors.status.success[600]],
+    colors: [colors.status.success, colors.status.successDark],
     route: "/exercises",
   },
   {
@@ -82,7 +83,7 @@ const quickActions: QuickAction[] = [
     title: "תזונה",
     subtitle: "מעקב קלוריות",
     icon: "nutrition",
-    colors: [colors.status.warning[500], colors.status.warning[600]],
+    colors: [colors.status.warning, colors.status.warningDark],
     route: "/nutrition",
     requiresAuth: true,
   },
@@ -91,7 +92,7 @@ const quickActions: QuickAction[] = [
     title: "אתגרים",
     subtitle: "הצטרף לאתגר",
     icon: "trophy",
-    colors: [colors.status.error[500], colors.status.error[600]],
+    colors: [colors.status.error, colors.status.errorDark],
     route: "/challenges",
   },
   {
@@ -130,8 +131,8 @@ const QuickActionCard = memo(
     const handlePressIn = useCallback(() => {
       Animated.spring(scaleAnim, {
         toValue: 0.95,
-        friction: 4,
         tension: 300,
+        friction: 10,
         useNativeDriver: true,
       }).start();
     }, [scaleAnim]);
@@ -139,18 +140,19 @@ const QuickActionCard = memo(
     const handlePressOut = useCallback(() => {
       Animated.spring(scaleAnim, {
         toValue: 1,
-        friction: 4,
         tension: 300,
+        friction: 10,
         useNativeDriver: true,
       }).start();
     }, [scaleAnim]);
 
     const handlePress = useCallback(() => {
       if (action.requiresAuth && isGuest) {
+        // לאורחים - הצע להירשם
         router.push("/signup");
       } else {
         // זמנית - כל הנתיבים מובילים למסך הבית
-        router.push("/");
+        router.push(action.route as any);
       }
     }, [action, isGuest]);
 
@@ -177,15 +179,18 @@ const QuickActionCard = memo(
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
+            {/* אייקון */}
             <View style={styles.iconContainer}>
-              <Ionicons name={action.icon} size={28} color={colors.light[50]} />
+              <Ionicons name={action.icon} size={24} color={colors.light[50]} />
             </View>
 
+            {/* טקסט */}
             <View style={styles.textContainer}>
               <Text style={styles.actionTitle}>{action.title}</Text>
               <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
             </View>
 
+            {/* נעילה לאורחים */}
             {action.requiresAuth && isGuest && (
               <View style={styles.lockBadge}>
                 <Ionicons
@@ -213,11 +218,11 @@ const QuickActions = memo(() => {
       <View style={styles.header}>
         <Text style={styles.title}>גישה מהירה</Text>
         <TouchableOpacity
-          onPress={() => router.push("/")}
+          onPress={() => router.push("/more")}
           style={styles.moreButton}
         >
           <Text style={styles.moreText}>עוד</Text>
-          <Ionicons name="apps" size={16} color={colors.primary[500]} />
+          <Ionicons name="apps" size={16} color={colors.primary[600]} />
         </TouchableOpacity>
       </View>
 
@@ -283,7 +288,7 @@ const styles = StyleSheet.create({
   },
   moreText: {
     fontSize: fontSizes.sm,
-    color: colors.primary[500],
+    color: colors.primary[600],
     fontWeight: fontWeights.medium,
   },
   actionsScroll: {
