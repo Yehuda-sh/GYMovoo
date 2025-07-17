@@ -49,50 +49,18 @@ interface DevPanelProps {
   isLoading?: boolean;
 }
 
-const DevPanel = memo(
-  ({
-    demoUsers,
-    onSelectUser,
-    onResetData,
-    isLoading = false,
-  }: DevPanelProps) => {
-    const renderDemoUserCard = (user: DemoUser) => (
-      <TouchableOpacity
-        key={user.id}
-        style={[styles.userCard, isLoading && styles.userCardDisabled]}
-        onPress={() => !isLoading && onSelectUser(user.id)}
-        disabled={isLoading}
-      >
-        {isLoading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="small" color={colors.primary[500]} />
-          </View>
-        )}
-        <View style={styles.userAvatar}>
-          <Text style={styles.userAvatarText}>
-            {user.avatar || user.name.charAt(0)}
-          </Text>
-        </View>
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>{user.name}</Text>
-          <Text style={styles.userEmail}>{user.email}</Text>
-          <Text style={styles.userMeta}>
-            {user.level} • {user.goal}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-
+const DevPanel: React.FC<DevPanelProps> = memo(
+  ({ demoUsers, onSelectUser, onResetData, isLoading = false }) => {
     return (
       <View style={styles.devPanel}>
-        {/* Header */}
+        {/* 🔧 Header */}
         <View style={styles.devHeader}>
-          <View style={styles.devIndicator} />
+          <View style={[styles.devIndicator, styles.pulsingIndicator]} />
           <Text style={styles.devTitle}>DEV MODE</Text>
           <Text style={styles.devVersion}>v1.0.0</Text>
         </View>
 
-        {/* Stats */}
+        {/* 📊 Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{demoUsers.length}</Text>
@@ -100,27 +68,49 @@ const DevPanel = memo(
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>100+</Text>
-            <Text style={styles.statLabel}>תרגילים</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>50+</Text>
-            <Text style={styles.statLabel}>תוכניות</Text>
+            <Text style={styles.statValue}>∞</Text>
+            <Text style={styles.statLabel}>כניסות</Text>
           </View>
         </View>
 
-        {/* Demo Users */}
-        <Text style={styles.demoSectionTitle}>בחר משתמש דמו</Text>
+        {/* 👥 Demo Users */}
+        <Text style={styles.demoSectionTitle}>בחר משתמש דמו:</Text>
         <ScrollView
           style={styles.usersScrollView}
           contentContainerStyle={styles.usersScrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {demoUsers.map(renderDemoUserCard)}
+          {demoUsers.map((user) => (
+            <View key={user.id} style={styles.userCardWrapper}>
+              <TouchableOpacity
+                style={[styles.userCard, isLoading && styles.userCardDisabled]}
+                onPress={() => !isLoading && onSelectUser(user.id)}
+                activeOpacity={0.7}
+                disabled={isLoading}
+              >
+                <View style={styles.userAvatar}>
+                  <Text style={styles.userAvatarText}>
+                    {user.name.charAt(0)}
+                  </Text>
+                </View>
+                <View style={styles.userInfo}>
+                  <Text style={styles.userName}>{user.name}</Text>
+                  <Text style={styles.userEmail}>{user.email}</Text>
+                  <Text style={styles.userMeta}>
+                    {user.level || "מתחיל"} • {user.goal || "כושר כללי"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              {isLoading && (
+                <View style={styles.loadingOverlay}>
+                  <ActivityIndicator size="small" color={colors.primary[500]} />
+                </View>
+              )}
+            </View>
+          ))}
         </ScrollView>
 
-        {/* Actions */}
+        {/* 🗑️ Actions */}
         <View style={styles.actionsContainer}>
           <TouchableOpacity
             style={[
@@ -129,8 +119,8 @@ const DevPanel = memo(
             ]}
             onPress={() => {
               Alert.alert(
-                "🗑️ איפוס נתונים",
-                "האם אתה בטוח שברצונך למחוק את כל הנתונים?",
+                "איפוס נתונים",
+                "פעולה זו תמחק את כל הנתונים המקומיים. להמשיך?",
                 [
                   { text: "ביטול", style: "cancel" },
                   {

@@ -1,154 +1,176 @@
 /**
  * @file screens/welcome/components/DemoUserCard.tsx
- * @description כרטיס להצגת משתמש דמו בפאנל הפיתוח
+ * @description כרטיס משתמש דמו למסך Welcome
  * @author GYMoveo Development
  * @version 1.0.0
  *
  * @component DemoUserCard
- * @parent DevPanel
+ * @parent WelcomeScreen
  *
  * @notes
- * - הצגת פרטי משתמש דמו
- * - תרגום רמות ומטרות לעברית
- * - אייקונים מתאימים לכל רמה/מטרה
- * - תמיכה במצב disabled
+ * - מציג פרטי משתמש דמו באופן ויזואלי
+ * - כולל אנימציות וגרדיאנטים
+ * - מתאים למצב לילה
  *
  * @changelog
- * - v1.0.0: Initial creation
+ * - v1.0.0: Initial component creation
  */
 
-import React, { memo, useMemo } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { memo, useRef } from "react";
 import {
-  View,
-  Text,
+  Animated,
   StyleSheet,
+  Text,
   TouchableOpacity,
-  ViewStyle,
+  View,
 } from "react-native";
-import { theme } from "@/styles/theme";
 
-const { colors, spacing, fontSizes, fontWeights, borderRadius } = theme;
+import theme from "@/styles/theme";
 
-// מפות תרגום
-const LEVEL_TRANSLATIONS: Record<string, string> = {
-  beginner: "מתחיל",
-  intermediate: "ביניים",
-  advanced: "מתקדם",
-};
-
-const GOAL_TRANSLATIONS: Record<string, string> = {
-  build_muscle: "בניית שריר",
-  lose_weight: "ירידה במשקל",
-  get_stronger: "חיזוק",
-  general_fitness: "כושר כללי",
-};
-
-// אייקונים לרמות
-const LEVEL_ICONS: Record<string, string> = {
-  beginner: "🌱",
-  intermediate: "💪",
-  advanced: "🔥",
-};
-
-// אייקונים למטרות
-const GOAL_ICONS: Record<string, string> = {
-  build_muscle: "🏋️",
-  lose_weight: "⚖️",
-  get_stronger: "💯",
-  general_fitness: "🎯",
-};
+const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
+  theme;
 
 interface DemoUserCardProps {
-  user: any;
-  onPress: (user: any) => void;
+  id: string;
+  name: string;
+  age?: number;
+  level?: string;
+  goal?: string;
+  onPress: (userId: string) => void;
   disabled?: boolean;
 }
 
-export const DemoUserCard: React.FC<DemoUserCardProps> = memo(
-  ({ user, onPress, disabled = false }) => {
-    // תרגומים ואייקונים
-    const levelText = LEVEL_TRANSLATIONS[user.level] || user.level;
-    const goalText = GOAL_TRANSLATIONS[user.goal] || user.goal;
-    const levelIcon = LEVEL_ICONS[user.level] || "📊";
-    const goalIcon = GOAL_ICONS[user.goal] || "🎯";
+const DemoUserCard: React.FC<DemoUserCardProps> = memo(
+  ({ id, name, age, level, goal, onPress, disabled = false }) => {
+    const scaleAnim = useRef(new Animated.Value(1)).current;
 
-    // סגנון דינמי לפי סטטוס
-    const containerStyle = useMemo((): ViewStyle[] => {
-      const styleArray: ViewStyle[] = [
-        styles.devButton,
-        { backgroundColor: user.color || colors.dark[600] },
-      ];
+    const handlePressIn = () => {
+      Animated.spring(scaleAnim, {
+        toValue: 0.96,
+        tension: 100,
+        friction: 10,
+        useNativeDriver: true,
+      }).start();
+    };
 
-      if (disabled) {
-        styleArray.push(styles.disabledButton);
+    const handlePressOut = () => {
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 100,
+        friction: 10,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const getGradientColors = () => {
+      switch (level?.toLowerCase()) {
+        case "מתקדם":
+          return [colors.status.error, colors.primary[700]];
+        case "ביניים":
+          return [colors.primary[600], colors.primary[800]];
+        default:
+          return [colors.status.success, colors.primary[600]];
       }
+    };
 
-      return styleArray;
-    }, [user.color, disabled]);
-
-    // אווטאר ראשי תיבות אם אין תמונה
-    const initials = useMemo(() => {
-      return user.name
-        .split(" ")
-        .map((word: string) => word[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
-    }, [user.name]);
+    const getIcon = () => {
+      switch (goal?.toLowerCase()) {
+        case "הרזיה":
+          return "flame";
+        case "בניית שריר":
+          return "barbell";
+        case "סיבולת":
+          return "bicycle";
+        default:
+          return "fitness";
+      }
+    };
 
     return (
-      <TouchableOpacity
-        style={containerStyle}
-        onPress={() => onPress(user)}
-        disabled={disabled}
-        activeOpacity={0.7}
+      <Animated.View
+        style={[
+          styles.container,
+          {
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
       >
-        {/* אווטאר */}
-        <View style={styles.avatarContainer}>
-          {user.avatar ? (
-            <Text style={styles.avatarEmoji}>{user.avatar}</Text>
-          ) : (
-            <View
-              style={[
-                styles.avatarPlaceholder,
-                { backgroundColor: user.color || colors.primary[600] },
-              ]}
-            >
-              <Text style={styles.avatarInitials}>{initials}</Text>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          onPress={() => !disabled && onPress(id)}
+          disabled={disabled}
+          style={[styles.touchable, disabled && styles.disabled]}
+        >
+          <LinearGradient
+            colors={getGradientColors()}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradient}
+          >
+            {/* Avatar Circle */}
+            <View style={styles.avatarContainer}>
+              <LinearGradient
+                colors={[`${colors.light[50]}20`, `${colors.light[50]}10`]}
+                style={styles.avatarGradient}
+              >
+                <Text style={styles.avatarText}>{name.charAt(0)}</Text>
+              </LinearGradient>
             </View>
-          )}
-        </View>
 
-        {/* פרטים אישיים */}
-        <View style={styles.infoContainer}>
-          <Text style={styles.demoButtonText} numberOfLines={1}>
-            {user.name}
-          </Text>
-          <Text style={styles.demoButtonSubtext} numberOfLines={1}>
-            {user.email}
-          </Text>
-        </View>
+            {/* Info Section */}
+            <View style={styles.infoContainer}>
+              <Text style={styles.name}>{name}</Text>
 
-        {/* מידע נוסף */}
-        <View style={styles.detailsContainer}>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailIcon}>{levelIcon}</Text>
-            <Text style={styles.demoButtonDetails}>{levelText}</Text>
-          </View>
-          <View style={styles.detailDivider} />
-          <View style={styles.detailRow}>
-            <Text style={styles.detailIcon}>{goalIcon}</Text>
-            <Text style={styles.demoButtonDetails}>{goalText}</Text>
-          </View>
-        </View>
+              {/* Details Row */}
+              <View style={styles.detailsContainer}>
+                <View style={styles.detailRow}>
+                  <Ionicons
+                    name="school-outline"
+                    size={12}
+                    color={colors.light[400]}
+                    style={styles.detailIcon}
+                  />
+                  <Text style={styles.demoButtonDetails}>
+                    {level || "מתחיל"}
+                  </Text>
+                </View>
 
-        {/* תג גיל */}
-        {user.age && (
-          <View style={styles.ageTag}>
-            <Text style={styles.ageText}>{user.age}</Text>
-          </View>
-        )}
-      </TouchableOpacity>
+                <View style={styles.detailDivider} />
+
+                <View style={styles.detailRow}>
+                  <Ionicons
+                    name={getIcon() as any}
+                    size={12}
+                    color={colors.light[400]}
+                    style={styles.detailIcon}
+                  />
+                  <Text style={styles.demoButtonDetails}>
+                    {goal || "כושר כללי"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Age Badge */}
+            {age && (
+              <View style={styles.ageTag}>
+                <Text style={styles.ageText}>{age}</Text>
+              </View>
+            )}
+
+            {/* Arrow */}
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={colors.light[400]}
+            />
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>
     );
   }
 );
@@ -156,47 +178,43 @@ export const DemoUserCard: React.FC<DemoUserCardProps> = memo(
 DemoUserCard.displayName = "DemoUserCard";
 
 const styles = StyleSheet.create({
-  devButton: {
+  container: {
+    marginBottom: spacing.md,
+  },
+  touchable: {
+    borderRadius: borderRadius.lg,
+    overflow: "hidden",
+  },
+  disabled: {
+    opacity: 0.6,
+  },
+  gradient: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.sm,
-    minHeight: 80,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  disabledButton: {
-    opacity: 0.6,
+    padding: spacing.lg,
+    position: "relative",
   },
   avatarContainer: {
     marginRight: spacing.md,
   },
-  avatarEmoji: {
-    fontSize: 32,
-  },
-  avatarPlaceholder: {
-    width: 40,
-    height: 40,
+  avatarGradient: {
+    width: 50,
+    height: 50,
     borderRadius: borderRadius.full,
     justifyContent: "center",
     alignItems: "center",
-    opacity: 0.8,
+    borderWidth: 2,
+    borderColor: `${colors.light[50]}20`,
   },
-  avatarInitials: {
-    color: colors.light[50],
-    fontSize: fontSizes.md,
+  avatarText: {
+    fontSize: fontSizes.xl,
     fontWeight: fontWeights.bold,
+    color: colors.light[50],
   },
   infoContainer: {
     flex: 1,
-    marginRight: spacing.sm,
   },
-  demoButtonText: {
+  name: {
     color: colors.light[50],
     fontSize: fontSizes.md,
     fontWeight: fontWeights.semiBold,
