@@ -1,18 +1,38 @@
+import { useUserStore } from "@/lib/stores/userStore";
+import { colors } from "@/styles/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
-import React from "react";
+import { Tabs, useRouter, useSegments } from "expo-router";
+import React, { useEffect } from "react";
 
 export default function TabsLayout() {
+  const router = useRouter();
+  const segments = useSegments();
+  const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+
+  useEffect(() => {
+    // Redirect to welcome if not authenticated
+    if (!isAuthenticated && segments[0] === "(tabs)") {
+      router.replace("/welcome");
+    }
+  }, [isAuthenticated, segments]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#1a1a1a",
-          borderTopColor: "#333",
+          backgroundColor: colors.dark[800],
+          borderTopColor: colors.dark[700],
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
         },
-        tabBarActiveTintColor: "#4c51bf",
-        tabBarInactiveTintColor: "#666",
+        tabBarActiveTintColor: colors.primary[500],
+        tabBarInactiveTintColor: colors.dark[400],
       }}
     >
       <Tabs.Screen

@@ -1,0 +1,35 @@
+diff --git a/node_modules/react-native-screens/src/components/Screen.tsx b/node_modules/react-native-screens/src/components/Screen.tsx
+index abcdefg..1234567 100644
+--- a/node_modules/react-native-screens/src/components/Screen.tsx
++++ b/node_modules/react-native-screens/src/components/Screen.tsx
+@@ -222,7 +222,11 @@ function ScreenContentWrapper(props: {
+   ) : (
+     <View
+       style={styles.container}
+-      ref={ref => ref?.setNativeProps({ _animation: null })}
++      ref={ref => {
++        if (ref && ref.setNativeProps && Platform.OS !== 'android') {
++          ref.setNativeProps({ _animation: null });
++        }
++      }}
+       // in the future, we can use `isFreezeEnabled` flag to determine whether
+       // to use `collapsable` prop
+       collapsable={false}>
+diff --git a/node_modules/react-native-screens/src/core.tsx b/node_modules/react-native-screens/src/core.tsx
+index 1234567..abcdefg 100644
+--- a/node_modules/react-native-screens/src/core.tsx
++++ b/node_modules/react-native-screens/src/core.tsx
+@@ -133,7 +133,13 @@ class InnerScreen extends React.Component<ScreenProps> {
+       // This prevents unwanted transition animations when navigating between screens
+       const { _animation, ...cleanedProps } = props;
+       
+-      ref?.setNativeProps(cleanedProps);
++      try {
++        if (ref && ref.setNativeProps && typeof ref.setNativeProps === 'function') {
++          ref.setNativeProps(cleanedProps);
++        }
++      } catch (error) {
++        // Silently catch the error on Android
++      }
+     }
+   }

@@ -1,10 +1,12 @@
-import { View, Text, StyleSheet } from "react-native";
-import { colors } from "@/styles/theme/colors";
+import { colors, fontSizes, fontWeights } from "@/styles/theme";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 export default function WorkoutsScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>מסך אימונים - בקרוב!</Text>
+      <Text style={styles.title}>מסך אימונים</Text>
+      <Text style={styles.subtitle}>בקרוב...</Text>
     </View>
   );
 }
@@ -12,12 +14,18 @@ export default function WorkoutsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.dark[800],
+    backgroundColor: colors.dark[900],
     justifyContent: "center",
     alignItems: "center",
   },
-  text: {
-    color: colors.text.primary,
-    fontSize: 20,
+  title: {
+    fontSize: fontSizes.xxl,
+    fontWeight: fontWeights.bold,
+    color: colors.light[50],
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: fontSizes.md,
+    color: colors.light[400],
   },
 });
