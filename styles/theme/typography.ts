@@ -1,76 +1,38 @@
 /**
- * 📁 Path: /styles/theme/typography.ts
- * 📝 Description: טיפוגרפיה וגופנים - Typography and fonts
- * 🔢 Version: 1.0
+ * @file styles/theme/typography.ts
+ * @description טיפוגרפיה וגופנים - Typography and fonts
+ * @author GYMoveo Development
+ * @version 1.0.1
  *
- * 🔗 Dependencies: None
+ * @notes
+ * - תמיכה בעברית ואנגלית
+ * - גופנים מותאמים לפלטפורמה
+ * - סגנונות טקסט מוגדרים מראש
  *
- * ⚠️ Supports both Hebrew and English fonts
+ * @changelog
+ * - v1.0.1: Fix structure to match imports
+ * - v1.0.0: Initial creation
  */
 
 import { Platform } from "react-native";
 
 // 🔤 Font families - משפחות גופנים
 export const fontFamilies = {
-  // English fonts - גופנים באנגלית
-  english: {
-    regular: Platform.select({
-      ios: "System",
-      android: "Roboto",
-      default: "System",
-    }),
-    medium: Platform.select({
-      ios: "System",
-      android: "Roboto-Medium",
-      default: "System",
-    }),
-    semiBold: Platform.select({
-      ios: "System",
-      android: "Roboto-Medium",
-      default: "System",
-    }),
-    bold: Platform.select({
-      ios: "System",
-      android: "Roboto-Bold",
-      default: "System",
-    }),
-    black: Platform.select({
-      ios: "System",
-      android: "Roboto-Black",
-      default: "System",
-    }),
-  },
+  // Primary font family
+  primary: Platform.select({
+    ios: "System",
+    android: "Roboto",
+    default: "System",
+  }),
 
-  // Hebrew fonts - גופנים בעברית
-  hebrew: {
-    regular: Platform.select({
-      ios: "System",
-      android: "Roboto",
-      default: "System",
-    }),
-    medium: Platform.select({
-      ios: "System",
-      android: "Roboto-Medium",
-      default: "System",
-    }),
-    semiBold: Platform.select({
-      ios: "System",
-      android: "Roboto-Medium",
-      default: "System",
-    }),
-    bold: Platform.select({
-      ios: "System",
-      android: "Roboto-Bold",
-      default: "System",
-    }),
-    black: Platform.select({
-      ios: "System",
-      android: "Roboto-Black",
-      default: "System",
-    }),
-  },
+  // Secondary font family
+  secondary: Platform.select({
+    ios: "Avenir",
+    android: "sans-serif",
+    default: "sans-serif",
+  }),
 
-  // Monospace for numbers - גופן מונוספייס למספרים
+  // Monospace for numbers
   mono: Platform.select({
     ios: "Menlo",
     android: "monospace",
@@ -80,28 +42,25 @@ export const fontFamilies = {
 
 // 📏 Font sizes - גדלי גופן
 export const fontSizes = {
-  // Tiny sizes - גדלים זעירים
+  // Tiny sizes
   xxxs: 10,
   xxs: 11,
   xs: 12,
 
-  // Regular sizes - גדלים רגילים
+  // Regular sizes
   sm: 14,
   md: 16,
   lg: 18,
 
-  // Large sizes - גדלים גדולים
+  // Large sizes
   xl: 20,
   xxl: 24,
   xxxl: 28,
 
-  // Display sizes - גדלי תצוגה
-  display: {
-    small: 32,
-    medium: 40,
-    large: 48,
-    huge: 56,
-  },
+  // Display sizes
+  display: 32,
+  displayLarge: 40,
+  displayHuge: 48,
 } as const;
 
 // 🏋️ Font weights - משקלי גופן
@@ -122,7 +81,7 @@ export const lineHeights = {
   relaxed: 1.7,
   loose: 2,
 
-  // Specific for different sizes - ספציפי לגדלים שונים
+  // Specific for different sizes
   body: 1.5,
   heading: 1.3,
   display: 1.2,
@@ -140,27 +99,27 @@ export const letterSpacing = {
 
 // 🎨 Text styles - סגנונות טקסט
 export const textStyles = {
-  // Display styles - סגנונות תצוגה
+  // Display styles
   displayLarge: {
-    fontSize: fontSizes.display.large,
+    fontSize: fontSizes.displayHuge,
     fontWeight: fontWeights.black,
     lineHeight: lineHeights.display,
     letterSpacing: letterSpacing.tight,
   },
   displayMedium: {
-    fontSize: fontSizes.display.medium,
+    fontSize: fontSizes.displayLarge,
     fontWeight: fontWeights.bold,
     lineHeight: lineHeights.display,
     letterSpacing: letterSpacing.tight,
   },
   displaySmall: {
-    fontSize: fontSizes.display.small,
+    fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     lineHeight: lineHeights.display,
     letterSpacing: letterSpacing.normal,
   },
 
-  // Heading styles - סגנונות כותרות
+  // Heading styles
   h1: {
     fontSize: fontSizes.xxxl,
     fontWeight: fontWeights.bold,
@@ -199,7 +158,7 @@ export const textStyles = {
     textTransform: "uppercase" as const,
   },
 
-  // Body styles - סגנונות גוף
+  // Body styles
   bodyLarge: {
     fontSize: fontSizes.lg,
     fontWeight: fontWeights.regular,
@@ -219,7 +178,7 @@ export const textStyles = {
     letterSpacing: letterSpacing.normal,
   },
 
-  // Label styles - סגנונות תוויות
+  // Label styles
   labelLarge: {
     fontSize: fontSizes.md,
     fontWeight: fontWeights.medium,
@@ -240,7 +199,7 @@ export const textStyles = {
     textTransform: "uppercase" as const,
   },
 
-  // Button text - טקסט כפתורים
+  // Button text
   button: {
     fontSize: fontSizes.md,
     fontWeight: fontWeights.semiBold,
@@ -248,7 +207,7 @@ export const textStyles = {
     letterSpacing: letterSpacing.wide,
   },
 
-  // Caption text - טקסט כיתוב
+  // Caption text
   caption: {
     fontSize: fontSizes.xs,
     fontWeight: fontWeights.regular,
@@ -256,7 +215,7 @@ export const textStyles = {
     letterSpacing: letterSpacing.wide,
   },
 
-  // Numbers - מספרים
+  // Numbers
   numberLarge: {
     fontSize: fontSizes.xxl,
     fontWeight: fontWeights.bold,
@@ -288,67 +247,22 @@ export const rtlStyles = {
 
 // 🎯 Helper functions - פונקציות עזר
 
-// Get font family by language - קבלת גופן לפי שפה
+// Get font family by language
 export const getFontFamily = (
   language: "he" | "en" = "en",
   weight: keyof typeof fontWeights = "regular"
 ): string => {
-  const fontFamily =
-    language === "he" ? fontFamilies.hebrew : fontFamilies.english;
-
-  switch (weight) {
-    case "regular":
-    case "thin":
-    case "light":
-      return fontFamily.regular;
-    case "medium":
-      return fontFamily.medium;
-    case "semiBold":
-      return fontFamily.semiBold;
-    case "bold":
-      return fontFamily.bold;
-    case "black":
-      return fontFamily.black;
-    default:
-      return fontFamily.regular;
-  }
+  // For now, using primary font for all languages
+  // Can be extended to support different fonts per language
+  return fontFamilies.primary as string;
 };
 
-// Create text style - יצירת סגנון טקסט
-export const createTextStyle = (
-  size: Exclude<keyof typeof fontSizes, "display"> = "md",
-  weight: keyof typeof fontWeights = "regular",
-  color: string = "#ffffff"
-) => ({
-  fontSize: fontSizes[size],
-  fontWeight: fontWeights[weight],
-  color,
-  lineHeight: fontSizes[size] * lineHeights.normal,
-});
-
-// Scale font size - שינוי גודל גופן
-export const scaleFontSize = (size: number, scale: number = 1): number => {
-  return Math.round(size * scale);
-};
-
-// 📱 Responsive font sizes - גדלי גופן רספונסיביים
-export const getResponsiveFontSize = (
-  baseSize: Exclude<keyof typeof fontSizes, "display">,
-  screenWidth: number
-): number => {
-  const base = fontSizes[baseSize];
-
-  if (screenWidth < 350) {
-    return scaleFontSize(base, 0.9);
-  } else if (screenWidth > 400) {
-    return scaleFontSize(base, 1.1);
-  }
-
-  return base;
-};
-
-// 🔧 Type exports - ייצוא טיפוסים
-export type FontSizeKeys = keyof typeof fontSizes;
-export type SimpleFontSizeKeys = Exclude<FontSizeKeys, "display">;
-export type FontWeightKeys = keyof typeof fontWeights;
-export type TextStyleKeys = keyof typeof textStyles;
+// Create the main typography object for backward compatibility
+export const typography = {
+  fontFamily: fontFamilies,
+  fontSize: fontSizes,
+  fontWeight: fontWeights,
+  lineHeight: lineHeights,
+  letterSpacing,
+  textStyles,
+} as const;

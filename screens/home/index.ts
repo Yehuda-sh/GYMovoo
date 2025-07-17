@@ -1,6 +1,6 @@
 /**
- * @file screens/welcome/index.ts
- * @description ייצוא ראשי של מסך Welcome
+ * @file screens/home/index.ts
+ * @description ייצוא ראשי של מסך Home
  * @author GYMoveo Development
  * @version 1.0.0
  *
@@ -13,7 +13,7 @@
  */
 
 // ייצוא המסך הראשי
-export { default as WelcomeScreen } from "./WelcomeScreen";
+export { default as HomeScreen } from "./HomeScreen";
 
 // ייצוא קומפוננטות (אם נרצה להשתמש בהן במקומות אחרים)
 export * from "./components";
