@@ -1,6 +1,6 @@
 /**
  * @file screens/welcome/components/BackgroundGradient.tsx
- * @description קומפוננטת רקע גרדיאנט עם אנימציה
+ * @description רקע גרדיאנט דינמי עם אנימציות וחלקיקים
  * @author GYMoveo Development
  * @version 1.0.0
  *
@@ -8,163 +8,259 @@
  * @parent WelcomeScreen
  *
  * @notes
- * - רקע גרדיאנט עם אנימציית pulse
- * - תמיכה בגדלי מסך שונים
- * - אופטימיזציה לביצועים
+ * - גרדיאנט רב-שכבתי עם אנימציות
+ * - חלקיקים צפים לאווירה דינמית
+ * - מותאם למצב כהה/בהיר
+ * - ביצועים מאופטמים
  *
  * @changelog
- * - v1.0.0: Initial creation
+ * - v1.0.0: Initial creation with particles and animations
  */
 
 import { theme } from "@/styles/theme";
+import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { memo, useEffect, useRef } from "react";
-import { Animated, Dimensions, StyleSheet, View } from "react-native";
+import React, { memo, useEffect, useMemo, useRef } from "react";
+import {
+  Animated,
+  Dimensions,
+  Platform,
+  StyleSheet,
+  View,
+  useColorScheme,
+} from "react-native";
 
 const { colors } = theme;
-
 const { width, height } = Dimensions.get("window");
 
-// Animation configuration
-const ANIMATION_CONFIG = {
-  pulseDuration: 4000,
-  minOpacity: 0.05,
-  maxOpacity: 0.15,
-  useNativeDriver: true,
-};
-
-// Gradient colors - שימוש בצבעי הtheme
-const gradientColors = {
-  base: [colors.dark[900], colors.dark[800], colors.dark[700]] as const,
-  glow: [colors.primary[600], colors.secondary[500]] as const,
-  cornerTop: `${colors.primary[600]}1A`, // 10% opacity
-  cornerBottom: `${colors.secondary[500]}1A`, // 10% opacity
-};
-
 interface BackgroundGradientProps {
-  visible?: boolean;
+  visible: boolean;
+  animated?: boolean;
+  particlesEnabled?: boolean;
 }
 
-export const BackgroundGradient: React.FC<BackgroundGradientProps> = memo(
-  ({ visible = true }) => {
-    const pulseAnim = useRef(new Animated.Value(0)).current;
-    const fadeAnim = useRef(new Animated.Value(visible ? 1 : 0)).current;
+// Particle configuration
+const PARTICLES_CONFIG = {
+  count: 15,
+  minSize: 2,
+  maxSize: 6,
+  minDuration: 8000,
+  maxDuration: 15000,
+  colors: ["#E91E63", "#9C27B0", "#3F51B5", "#00BCD4"],
+};
 
-    // Fade animation when visibility changes
+/**
+ * Individual floating particle
+ */
+const Particle: React.FC<{ delay: number; color: string }> = memo(
+  ({ delay, color }) => {
+    const translateY = useRef(new Animated.Value(height)).current;
+    const translateX = useRef(new Animated.Value(0)).current;
+    const opacity = useRef(new Animated.Value(0)).current;
+    const scale = useRef(new Animated.Value(0)).current;
+
+    const startX = useMemo(() => Math.random() * width, []);
+    const size = useMemo(
+      () =>
+        PARTICLES_CONFIG.minSize +
+        Math.random() * (PARTICLES_CONFIG.maxSize - PARTICLES_CONFIG.minSize),
+      []
+    );
+    const duration = useMemo(
+      () =>
+        PARTICLES_CONFIG.minDuration +
+        Math.random() *
+          (PARTICLES_CONFIG.maxDuration - PARTICLES_CONFIG.minDuration),
+      []
+    );
+
     useEffect(() => {
-      Animated.timing(fadeAnim, {
-        toValue: visible ? 1 : 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }, [visible, fadeAnim]);
-
-    // Pulse animation
-    useEffect(() => {
-      if (!visible) return;
-
-      const pulseAnimation = Animated.loop(
+      const animation = Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: ANIMATION_CONFIG.pulseDuration,
-            useNativeDriver: ANIMATION_CONFIG.useNativeDriver,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 0,
-            duration: ANIMATION_CONFIG.pulseDuration,
-            useNativeDriver: ANIMATION_CONFIG.useNativeDriver,
+          Animated.parallel([
+            Animated.timing(translateY, {
+              toValue: -size * 2,
+              duration,
+              useNativeDriver: true,
+              delay,
+            }),
+            Animated.sequence([
+              Animated.timing(opacity, {
+                toValue: 0.6,
+                duration: duration * 0.2,
+                useNativeDriver: true,
+                delay,
+              }),
+              Animated.timing(opacity, {
+                toValue: 0.6,
+                duration: duration * 0.6,
+                useNativeDriver: true,
+              }),
+              Animated.timing(opacity, {
+                toValue: 0,
+                duration: duration * 0.2,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.timing(translateX, {
+              toValue: (Math.random() - 0.5) * 100,
+              duration,
+              useNativeDriver: true,
+              delay,
+            }),
+            Animated.sequence([
+              Animated.timing(scale, {
+                toValue: 1,
+                duration: duration * 0.3,
+                useNativeDriver: true,
+                delay,
+              }),
+              Animated.timing(scale, {
+                toValue: 0.8,
+                duration: duration * 0.7,
+                useNativeDriver: true,
+              }),
+            ]),
+          ]),
+          Animated.timing(translateY, {
+            toValue: height,
+            duration: 0,
+            useNativeDriver: true,
           }),
         ])
       );
 
-      pulseAnimation.start();
+      animation.start();
+      return () => animation.stop();
+    }, [translateY, translateX, opacity, scale, duration, delay, size]);
 
-      return () => {
-        pulseAnimation.stop();
-      };
-    }, [visible, pulseAnim]);
+    return (
+      <Animated.View
+        style={[
+          styles.particle,
+          {
+            left: startX,
+            width: size,
+            height: size,
+            backgroundColor: color,
+            opacity,
+            transform: [{ translateY }, { translateX }, { scale }],
+          },
+        ]}
+      />
+    );
+  }
+);
+
+Particle.displayName = "Particle";
+
+/**
+ * Dynamic background gradient with particles
+ */
+const BackgroundGradient: React.FC<BackgroundGradientProps> = memo(
+  ({ visible, animated = true, particlesEnabled = true }) => {
+    const colorScheme = useColorScheme();
+    const animatedValue = useRef(new Animated.Value(0)).current;
+
+    // Dynamic gradient colors based on theme
+    const gradientColors = useMemo(() => {
+      if (colorScheme === "dark") {
+        return [
+          colors.dark[900],
+          colors.primary[900],
+          colors.secondary[900],
+          colors.dark[800],
+        ];
+      }
+      return [
+        colors.primary[600],
+        colors.secondary[500],
+        colors.primary[700],
+        colors.dark[800],
+      ];
+    }, [colorScheme]);
+
+    // Gradient animation
+    useEffect(() => {
+      if (animated) {
+        const animation = Animated.loop(
+          Animated.sequence([
+            Animated.timing(animatedValue, {
+              toValue: 1,
+              duration: 10000,
+              useNativeDriver: false,
+            }),
+            Animated.timing(animatedValue, {
+              toValue: 0,
+              duration: 10000,
+              useNativeDriver: false,
+            }),
+          ])
+        );
+        animation.start();
+        return () => animation.stop();
+      }
+    }, [animatedValue, animated]);
+
+    // Interpolate gradient positions
+    const endY = animated
+      ? animatedValue.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.9, 1],
+        })
+      : 1;
 
     if (!visible) return null;
 
     return (
-      <Animated.View
-        style={[StyleSheet.absoluteFillObject, { opacity: fadeAnim }]}
-        pointerEvents="none"
-      >
-        {/* רקע בסיס עם גרדיאנט כהה */}
-        <LinearGradient
-          colors={gradientColors.base}
-          style={StyleSheet.absoluteFillObject}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          locations={[0, 0.5, 1]}
-        />
-
-        {/* שכבת glow עדינה */}
-        <Animated.View
-          style={[
-            styles.glowOverlay,
-            {
-              opacity: pulseAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [
-                  ANIMATION_CONFIG.minOpacity,
-                  ANIMATION_CONFIG.maxOpacity,
-                ],
-              }),
-            },
-          ]}
-        >
+      <View style={StyleSheet.absoluteFillObject}>
+        {/* Primary gradient */}
+        <Animated.View style={StyleSheet.absoluteFillObject}>
           <LinearGradient
-            colors={gradientColors.glow}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+            colors={gradientColors}
             style={StyleSheet.absoluteFillObject}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: endY as any }}
           />
         </Animated.View>
 
-        {/* אפקט gradient נוסף בפינות */}
-        <View style={styles.cornerGradientTop}>
-          <LinearGradient
-            colors={[gradientColors.cornerTop, "transparent"]}
-            style={styles.cornerGradient}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-          />
-        </View>
+        {/* Secondary overlay gradient */}
+        <LinearGradient
+          colors={[
+            "transparent",
+            `${colors.dark[900]}33`,
+            `${colors.dark[900]}66`,
+          ]}
+          style={[StyleSheet.absoluteFillObject, { opacity: 0.5 }]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+        />
 
-        <View style={styles.cornerGradientBottom}>
-          <LinearGradient
-            colors={["transparent", gradientColors.cornerBottom]}
-            style={styles.cornerGradient}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-          />
-        </View>
-
-        {/* Side gradients for wider screens */}
-        {width > 768 && (
-          <>
-            <View style={styles.sideGradientLeft}>
-              <LinearGradient
-                colors={[gradientColors.cornerTop, "transparent"]}
-                style={styles.sideGradient}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-              />
-            </View>
-            <View style={styles.sideGradientRight}>
-              <LinearGradient
-                colors={["transparent", gradientColors.cornerBottom]}
-                style={styles.sideGradient}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-              />
-            </View>
-          </>
+        {/* Blur overlay for depth (iOS only) */}
+        {Platform.OS === "ios" && (
+          <View style={[StyleSheet.absoluteFillObject, { opacity: 0.1 }]}>
+            <BlurView intensity={20} style={StyleSheet.absoluteFillObject} />
+          </View>
         )}
-      </Animated.View>
+
+        {/* Floating particles */}
+        {particlesEnabled && (
+          <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+            {Array.from({ length: PARTICLES_CONFIG.count }).map((_, i) => (
+              <Particle
+                key={i}
+                delay={i * 500}
+                color={
+                  PARTICLES_CONFIG.colors[i % PARTICLES_CONFIG.colors.length]
+                }
+              />
+            ))}
+          </View>
+        )}
+
+        {/* Vignette effect */}
+        <View style={styles.vignette} pointerEvents="none" />
+      </View>
     );
   }
 );
@@ -172,42 +268,19 @@ export const BackgroundGradient: React.FC<BackgroundGradientProps> = memo(
 BackgroundGradient.displayName = "BackgroundGradient";
 
 const styles = StyleSheet.create({
-  glowOverlay: {
+  particle: {
+    position: "absolute",
+    borderRadius: 999,
+    shadowColor: "#fff",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  vignette: {
     ...StyleSheet.absoluteFillObject,
-  },
-  cornerGradientTop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: height * 0.3,
-  },
-  cornerGradientBottom: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: height * 0.3,
-  },
-  cornerGradient: {
-    flex: 1,
-  },
-  sideGradientLeft: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    bottom: 0,
-    width: width * 0.2,
-  },
-  sideGradientRight: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: width * 0.2,
-  },
-  sideGradient: {
-    flex: 1,
+    backgroundColor: "transparent",
+    borderWidth: 100,
+    borderColor: "rgba(0,0,0,0.2)",
   },
 });
 

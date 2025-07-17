@@ -1,6 +1,6 @@
 /**
  * @file screens/welcome/components/SocialLoginButtons.tsx
- * @description כפתורי התחברות עם רשתות חברתיות
+ * @description כפתורי התחברות חברתית עם אנימציות
  * @author GYMoveo Development
  * @version 1.0.0
  *
@@ -8,13 +8,13 @@
  * @parent WelcomeScreen
  *
  * @notes
- * - תמיכה ב-Google ו-Apple (iOS בלבד)
- * - אנימציות לחיצה עם loading state
- * - עיצוב מותאם לכל פלטפורמה
- * - הודעת פרטיות
+ * - תמיכה ב-Google ו-Apple Sign In
+ * - אנימציות לחיצה וטעינה
+ * - הסתרת Apple Sign In ב-Android
+ * - עיצוב מודרני עם גרדיאנטים
  *
  * @changelog
- * - v1.0.0: Initial creation
+ * - v1.0.0: Initial creation with modern design
  */
 
 import { theme } from "@/styles/theme";
@@ -38,24 +38,45 @@ const { colors, spacing, fontSizes, fontWeights, borderRadius, shadows } =
 const { width, height } = Dimensions.get("window");
 const isSmallDevice = height < 700;
 
-// Animation configuration
-const ANIMATION_CONFIG = {
-  tension: 300,
-  friction: 10,
-  pressScale: 0.95,
-  pressDelay: 100,
-  useNativeDriver: true,
+// Social platform configs
+const SOCIAL_CONFIGS = {
+  google: {
+    colors: {
+      light: ["#4285F4", "#3367D6"],
+      dark: ["#2a5298", "#1e3a6f"],
+    },
+    icon: "logo-google",
+    text: "המשך עם Google",
+  },
+  apple: {
+    colors: {
+      light: ["#000000", "#1a1a1a"],
+      dark: ["#ffffff", "#f0f0f0"],
+    },
+    icon: "logo-apple",
+    text: "המשך עם Apple",
+  },
 };
 
 interface SocialLoginButtonsProps {
-  onGoogleLogin: () => void;
-  onAppleLogin: () => void;
+  onGoogleLogin: () => void | Promise<void>;
+  onAppleLogin: () => void | Promise<void>;
   fadeAnim: Animated.Value;
   loading?: boolean;
+  disabled?: boolean;
 }
 
-export const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = memo(
-  ({ onGoogleLogin, onAppleLogin, fadeAnim, loading = false }) => {
+/**
+ * Social login buttons with animations
+ */
+const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = memo(
+  ({
+    onGoogleLogin,
+    onAppleLogin,
+    fadeAnim,
+    loading = false,
+    disabled = false,
+  }) => {
     const googleScale = useRef(new Animated.Value(1)).current;
     const appleScale = useRef(new Animated.Value(1)).current;
     const loadingOpacity = useRef(new Animated.Value(0)).current;
@@ -69,57 +90,37 @@ export const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = memo(
       }).start();
     }, [loading, loadingOpacity]);
 
-    // Generic button press animation
-    const animateButtonPress = useCallback(
-      (scale: Animated.Value, onComplete: () => void) => {
-        if (loading) return;
+    // Handle button animations
+    const handlePressIn = useCallback((scale: Animated.Value) => {
+      if (Platform.OS === "ios") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      Animated.spring(scale, {
+        toValue: 0.95,
+        tension: 300,
+        friction: 10,
+        useNativeDriver: true,
+      }).start();
+    }, []);
 
-        if (Platform.OS === "ios") {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
+    const handlePressOut = useCallback((scale: Animated.Value) => {
+      Animated.spring(scale, {
+        toValue: 1,
+        tension: 300,
+        friction: 10,
+        useNativeDriver: true,
+      }).start();
+    }, []);
 
-        // Press in
-        Animated.spring(scale, {
-          toValue: ANIMATION_CONFIG.pressScale,
-          tension: ANIMATION_CONFIG.tension,
-          friction: ANIMATION_CONFIG.friction,
-          useNativeDriver: ANIMATION_CONFIG.useNativeDriver,
-        }).start();
-
-        // Press out
-        setTimeout(() => {
-          Animated.spring(scale, {
-            toValue: 1,
-            tension: ANIMATION_CONFIG.tension,
-            friction: ANIMATION_CONFIG.friction,
-            useNativeDriver: ANIMATION_CONFIG.useNativeDriver,
-          }).start();
-
-          // Trigger callback
-          setTimeout(onComplete, ANIMATION_CONFIG.pressDelay);
-        }, 150);
-      },
-      [loading]
-    );
-
-    // Google button handlers
-    const handleGooglePress = useCallback(() => {
-      animateButtonPress(googleScale, onGoogleLogin);
-    }, [animateButtonPress, googleScale, onGoogleLogin]);
-
-    // Apple button handlers
-    const handleApplePress = useCallback(() => {
-      animateButtonPress(appleScale, onAppleLogin);
-    }, [animateButtonPress, appleScale, onAppleLogin]);
-
-    // Button renderer
+    // Render social button
     const renderSocialButton = useCallback(
       (
         platform: "google" | "apple",
-        scale: Animated.Value,
         onPress: () => void,
-        buttonColors: { light: string; dark: string }
+        scale: Animated.Value
       ) => {
+        const config = SOCIAL_CONFIGS[platform];
+        const buttonColors = config.colors;
         const iconName = platform === "google" ? "logo-google" : "logo-apple";
         const buttonText = platform === "google" ? "Google" : "Apple";
 
@@ -154,7 +155,7 @@ export const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = memo(
                   <>
                     <Ionicons
                       name={iconName as any}
-                      size={isSmallDevice ? 16 : 18}
+                      size={isSmallDevice ? 18 : 20}
                       color="#fff"
                     />
                     <Text
@@ -162,9 +163,8 @@ export const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = memo(
                         styles.socialButtonText,
                         isSmallDevice && styles.smallText,
                       ]}
-                      numberOfLines={1}
                     >
-                      {buttonText}
+                      {config.text}
                     </Text>
                   </>
                 )}
@@ -176,42 +176,39 @@ export const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = memo(
       [loading, loadingOpacity, isSmallDevice]
     );
 
-    // Show only Google button on Android
-    const showAppleButton = Platform.OS === "ios";
+    // Show only Google on Android
+    const showApple = Platform.OS === "ios";
 
     return (
-      <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-        {/* קו מפריד עם "או" */}
+      <Animated.View
+        style={[
+          styles.container,
+          {
+            opacity: fadeAnim,
+          },
+        ]}
+      >
+        {/* Divider */}
         <View style={styles.dividerContainer}>
           <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>או התחבר עם</Text>
+          <Text style={styles.dividerText}>או המשך עם</Text>
           <View style={styles.dividerLine} />
         </View>
 
-        {/* כפתורי התחברות */}
+        {/* Social buttons */}
         <View
           style={[
             styles.socialButtonsRow,
-            !showAppleButton && styles.singleButtonRow,
+            !showApple && styles.singleButtonRow,
           ]}
         >
-          {/* כפתור Google */}
-          {renderSocialButton("google", googleScale, handleGooglePress, {
-            light: "#4285F4",
-            dark: "#1a73e8",
-          })}
-
-          {/* כפתור Apple - רק ב-iOS */}
-          {showAppleButton &&
-            renderSocialButton("apple", appleScale, handleApplePress, {
-              light: "#000000",
-              dark: "#000000",
-            })}
+          {renderSocialButton("google", onGoogleLogin, googleScale)}
+          {showApple && renderSocialButton("apple", onAppleLogin, appleScale)}
         </View>
 
-        {/* Privacy notice */}
+        {/* Privacy text */}
         <Text style={styles.privacyText}>
-          ההתחברות מאובטחת ולא נשתף את המידע שלך
+          בהתחברות אתה מסכים לתנאי השימוש ומדיניות הפרטיות
         </Text>
       </Animated.View>
     );
@@ -222,8 +219,7 @@ SocialLoginButtons.displayName = "SocialLoginButtons";
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: spacing.xl,
-    paddingVertical: isSmallDevice ? spacing.md : spacing.lg,
+    paddingHorizontal: isSmallDevice ? spacing.md : spacing.lg,
     width: "100%",
   },
 

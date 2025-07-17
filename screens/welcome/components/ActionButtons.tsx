@@ -1,6 +1,6 @@
 /**
  * @file screens/welcome/components/ActionButtons.tsx
- * @description כפתורי הרשמה וכניסה ראשיים
+ * @description כפתורי הפעולה הראשיים - התחברות והרשמה
  * @author GYMoveo Development
  * @version 1.0.0
  *
@@ -8,17 +8,17 @@
  * @parent WelcomeScreen
  *
  * @notes
- * - כפתור הרשמה ראשי עם גרדיאנט
- * - לינק לכניסה למשתמשים קיימים
- * - אנימציות לחיצה עם haptic feedback
- * - תמיכה במכשירים קטנים
+ * - כפתורים עם גרדיאנטים ואנימציות
+ * - תמיכה בטעינה ומצבי disabled
+ * - אנימציית hover למכשירים תומכים
+ * - RTL support מלא
  *
  * @changelog
- * - v1.0.0: Initial creation
+ * - v1.0.0: Initial creation with gradients and animations
  */
 
 import { theme } from "@/styles/theme";
-import { Ionicons } from "@expo/vector-icons";
+import { unifiedDesignSystem } from "@/styles/theme/unifiedDesignSystem";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { memo, useCallback, useRef } from "react";
@@ -26,166 +26,138 @@ import {
   Animated,
   Dimensions,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 
 const { colors, spacing, fontSizes, fontWeights, borderRadius, shadows } =
   theme;
+const { gradients } = unifiedDesignSystem.colors;
 
-const { height, width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 const isSmallDevice = height < 700;
-const isNarrowDevice = width < 350;
-
-// Animation configuration
-const ANIMATION_CONFIG = {
-  tension: 300,
-  friction: 10,
-  useNativeDriver: true,
-};
-
-const PRESS_SCALE = 0.95;
-const ANIMATION_DELAY = 100;
+const isTinyDevice = height < 600;
 
 interface ActionButtonsProps {
-  onSignup: () => void;
-  onLogin: () => void;
   buttonsSlide: Animated.Value;
+  onLogin: () => void;
+  onSignup: () => void;
   fadeAnim: Animated.Value;
+  disabled?: boolean;
 }
 
-export const ActionButtons: React.FC<ActionButtonsProps> = memo(
-  ({ onSignup, onLogin, buttonsSlide, fadeAnim }) => {
-    const signupScale = useRef(new Animated.Value(1)).current;
+/**
+ * Main action buttons for login and signup
+ */
+const ActionButtons: React.FC<ActionButtonsProps> = memo(
+  ({ buttonsSlide, onLogin, onSignup, fadeAnim, disabled = false }) => {
     const loginScale = useRef(new Animated.Value(1)).current;
+    const signupScale = useRef(new Animated.Value(1)).current;
 
-    // Press animations
-    const animatePress = useCallback(
+    // Animation helpers
+    const animateScale = useCallback(
       (scale: Animated.Value, toValue: number) => {
         Animated.spring(scale, {
           toValue,
-          ...ANIMATION_CONFIG,
+          friction: 6,
+          tension: 100,
+          useNativeDriver: true,
         }).start();
       },
       []
     );
 
-    // Signup button handlers
-    const handleSignupPressIn = useCallback(() => {
-      if (Platform.OS === "ios") {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }
-      animatePress(signupScale, PRESS_SCALE);
-    }, [animatePress, signupScale]);
+    // Handle button press with haptics
+    const handlePressIn = useCallback(
+      (scale: Animated.Value) => {
+        if (Platform.OS === "ios") {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+        animateScale(scale, 0.95);
+      },
+      [animateScale]
+    );
 
-    const handleSignupPressOut = useCallback(() => {
-      animatePress(signupScale, 1);
-      setTimeout(() => onSignup(), ANIMATION_DELAY);
-    }, [animatePress, signupScale, onSignup]);
-
-    // Login button handlers
-    const handleLoginPressIn = useCallback(() => {
-      if (Platform.OS === "ios") {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-      animatePress(loginScale, PRESS_SCALE);
-    }, [animatePress, loginScale]);
-
-    const handleLoginPressOut = useCallback(() => {
-      animatePress(loginScale, 1);
-      setTimeout(() => onLogin(), ANIMATION_DELAY);
-    }, [animatePress, loginScale, onLogin]);
+    const handlePressOut = useCallback(
+      (scale: Animated.Value) => {
+        animateScale(scale, 1);
+      },
+      [animateScale]
+    );
 
     return (
       <Animated.View
         style={[
           styles.container,
           {
-            transform: [{ translateY: buttonsSlide }],
             opacity: fadeAnim,
+            transform: [{ translateY: buttonsSlide }],
           },
         ]}
       >
-        {/* כפתור הרשמה ראשי */}
+        {/* Login Button */}
+        <Animated.View
+          style={[styles.buttonWrapper, { transform: [{ scale: loginScale }] }]}
+        >
+          <Pressable
+            onPress={onLogin}
+            onPressIn={() => handlePressIn(loginScale)}
+            onPressOut={() => handlePressOut(loginScale)}
+            disabled={disabled}
+            accessible={true}
+            accessibilityLabel="התחבר"
+            accessibilityHint="לחץ כדי להתחבר לחשבון הקיים שלך"
+            accessibilityRole="button"
+            accessibilityState={{ disabled }}
+          >
+            <LinearGradient
+              colors={gradients.primary}
+              style={[styles.primaryButton, disabled && styles.buttonDisabled]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Text style={styles.primaryButtonText}>התחבר לחשבון</Text>
+              {!disabled && <View style={styles.buttonShine} />}
+            </LinearGradient>
+          </Pressable>
+        </Animated.View>
+
+        {/* Signup Button */}
         <Animated.View
           style={[
             styles.buttonWrapper,
             { transform: [{ scale: signupScale }] },
           ]}
         >
-          <TouchableOpacity
-            activeOpacity={1}
-            onPressIn={handleSignupPressIn}
-            onPressOut={handleSignupPressOut}
+          <Pressable
+            onPress={onSignup}
+            onPressIn={() => handlePressIn(signupScale)}
+            onPressOut={() => handlePressOut(signupScale)}
+            disabled={disabled}
+            style={[styles.secondaryButton, disabled && styles.buttonDisabled]}
             accessible={true}
-            accessibilityLabel="הרשמה למערכת"
+            accessibilityLabel="צור חשבון חדש"
+            accessibilityHint="לחץ כדי ליצור חשבון חדש באפליקציה"
             accessibilityRole="button"
+            accessibilityState={{ disabled }}
           >
             <LinearGradient
-              colors={[colors.primary[600], colors.primary[700]]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.signupButton}
+              colors={["transparent", "transparent"]}
+              style={styles.secondaryButtonGradient}
             >
-              <View style={styles.buttonContent}>
-                <Ionicons
-                  name="rocket"
-                  size={isSmallDevice ? 20 : 22}
-                  color={colors.light[50]}
-                />
-                <Text
-                  style={[
-                    styles.signupButtonText,
-                    isNarrowDevice && styles.signupButtonTextSmall,
-                  ]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                >
-                  בואו נתחיל את המסע!
-                </Text>
-                <Ionicons
-                  name="arrow-forward"
-                  size={isSmallDevice ? 18 : 20}
-                  color={colors.light[50]}
-                />
-              </View>
+              <Text style={styles.secondaryButtonText}>צור חשבון חדש</Text>
             </LinearGradient>
-          </TouchableOpacity>
+          </Pressable>
         </Animated.View>
 
-        {/* Divider with "או" */}
-        <View style={styles.dividerContainer}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>או</Text>
-          <View style={styles.dividerLine} />
+        {/* Decorative element */}
+        <View style={styles.decorativeContainer}>
+          <View style={styles.decorativeLine} />
+          <Text style={styles.decorativeText}>או</Text>
+          <View style={styles.decorativeLine} />
         </View>
-
-        {/* קישור כניסה */}
-        <Animated.View
-          style={[
-            styles.loginContainer,
-            { transform: [{ scale: loginScale }] },
-          ]}
-        >
-          <TouchableOpacity
-            onPressIn={handleLoginPressIn}
-            onPressOut={handleLoginPressOut}
-            style={styles.loginButton}
-            activeOpacity={1}
-            accessible={true}
-            accessibilityLabel="כניסה לחשבון קיים"
-            accessibilityRole="button"
-          >
-            <Text style={styles.loginText}>יש לי חשבון</Text>
-            <Ionicons
-              name="log-in-outline"
-              size={isSmallDevice ? 16 : 18}
-              color={colors.primary[600]}
-            />
-          </TouchableOpacity>
-        </Animated.View>
       </Animated.View>
     );
   }
@@ -197,66 +169,74 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
     paddingHorizontal: spacing.xl,
-    marginTop: isSmallDevice ? spacing.md : spacing.xl,
+    marginBottom: isTinyDevice ? spacing.lg : spacing.xl,
   },
   buttonWrapper: {
-    marginBottom: spacing.md,
+    marginBottom: isTinyDevice ? spacing.sm : spacing.md,
   },
-  signupButton: {
-    height: isSmallDevice ? 52 : 58,
+  primaryButton: {
+    height: isSmallDevice ? 48 : 52,
     borderRadius: borderRadius.lg,
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center",
     ...shadows.md,
+    position: "relative",
+    overflow: "hidden",
   },
-  buttonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: isSmallDevice ? 8 : 10,
-    paddingHorizontal: spacing.xl,
-  },
-  signupButtonText: {
-    fontSize: isSmallDevice ? fontSizes.md : fontSizes.lg,
+  primaryButtonText: {
+    fontSize: isTinyDevice ? fontSizes.md : fontSizes.lg,
     fontWeight: fontWeights.bold,
     color: colors.light[50],
     letterSpacing: 0.5,
   },
-  signupButtonTextSmall: {
-    fontSize: fontSizes.sm,
+  secondaryButton: {
+    height: isSmallDevice ? 48 : 52,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
+    borderColor: colors.primary[500],
+    backgroundColor: "transparent",
+    overflow: "hidden",
   },
-  dividerContainer: {
+  secondaryButtonGradient: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xl,
+  },
+  secondaryButtonText: {
+    fontSize: isTinyDevice ? fontSizes.md : fontSizes.lg,
+    fontWeight: fontWeights.semiBold,
+    color: colors.primary[400],
+    letterSpacing: 0.5,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonShine: {
+    position: "absolute",
+    top: -10,
+    left: -100,
+    width: 100,
+    height: "200%",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    transform: [{ rotate: "25deg" }],
+  },
+  decorativeContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: spacing.sm,
-    paddingHorizontal: spacing.xxxl,
+    marginTop: isTinyDevice ? spacing.md : spacing.lg,
+    paddingHorizontal: spacing.md,
   },
-  dividerLine: {
+  decorativeLine: {
     flex: 1,
     height: 1,
     backgroundColor: colors.light[700],
   },
-  dividerText: {
-    marginHorizontal: spacing.md,
+  decorativeText: {
     fontSize: fontSizes.sm,
-    color: colors.light[400],
+    color: colors.light[500],
     fontWeight: fontWeights.medium,
-  },
-  loginContainer: {
-    alignItems: "center",
-  },
-  loginButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: borderRadius.md,
-    backgroundColor: `${colors.primary[600]}1A`,
-  },
-  loginText: {
-    fontSize: isSmallDevice ? fontSizes.sm : fontSizes.md,
-    fontWeight: fontWeights.semiBold,
-    color: colors.primary[600],
+    marginHorizontal: spacing.md,
   },
 });
 

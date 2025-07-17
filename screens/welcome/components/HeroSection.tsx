@@ -72,83 +72,73 @@ interface HeroSectionProps {
   onLogoPress?: () => void;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = memo(
+/**
+ * Hero section with logo and animations
+ */
+const HeroSection: React.FC<HeroSectionProps> = memo(
   ({ fadeAnim, logoScale, titleSlide, subtitleSlide, onLogoPress }) => {
-    const breathingScale = useRef(new Animated.Value(1)).current;
-    const glowOpacity = useRef(
+    const breathingAnim = useRef(new Animated.Value(1)).current;
+    const glowAnim = useRef(
       new Animated.Value(ANIMATION_CONFIG.glow.minOpacity)
     ).current;
-    const statsOpacity = useRef(new Animated.Value(0)).current;
+    const pressAnim = useRef(new Animated.Value(1)).current;
 
-    // Start breathing animation
+    // Logo breathing animation
     useEffect(() => {
-      // Breathing animation
-      const breathingAnimation = Animated.loop(
+      const breathing = Animated.loop(
         Animated.sequence([
-          Animated.timing(breathingScale, {
+          Animated.timing(breathingAnim, {
             toValue: ANIMATION_CONFIG.breathing.scale,
             duration: ANIMATION_CONFIG.breathing.duration,
             useNativeDriver: true,
           }),
-          Animated.timing(breathingScale, {
-            toValue: 1.0,
+          Animated.timing(breathingAnim, {
+            toValue: 1,
             duration: ANIMATION_CONFIG.breathing.duration,
             useNativeDriver: true,
           }),
         ])
       );
+      breathing.start();
 
-      // Glow animation
-      const glowAnimation = Animated.loop(
+      return () => breathing.stop();
+    }, [breathingAnim]);
+
+    // Glow animation
+    useEffect(() => {
+      const glow = Animated.loop(
         Animated.sequence([
-          Animated.timing(glowOpacity, {
+          Animated.timing(glowAnim, {
             toValue: ANIMATION_CONFIG.glow.maxOpacity,
             duration: ANIMATION_CONFIG.glow.duration,
             useNativeDriver: true,
           }),
-          Animated.timing(glowOpacity, {
+          Animated.timing(glowAnim, {
             toValue: ANIMATION_CONFIG.glow.minOpacity,
             duration: ANIMATION_CONFIG.glow.duration,
             useNativeDriver: true,
           }),
         ])
       );
+      glow.start();
 
-      // Stats fade in
-      const statsAnimation = Animated.timing(statsOpacity, {
-        toValue: 1,
-        duration: 800,
-        delay: 600,
-        useNativeDriver: true,
-      });
-
-      breathingAnimation.start();
-      glowAnimation.start();
-      statsAnimation.start();
-
-      // Cleanup
-      return () => {
-        breathingAnimation.stop();
-        glowAnimation.stop();
-        statsAnimation.stop();
-      };
-    }, [breathingScale, glowOpacity, statsOpacity]);
+      return () => glow.stop();
+    }, [glowAnim]);
 
     // Handle logo press
     const handleLogoPress = useCallback(() => {
-      if (!onLogoPress) return;
-
       if (Platform.OS === "ios") {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
 
+      // Press animation
       Animated.sequence([
-        Animated.timing(logoScale, {
+        Animated.timing(pressAnim, {
           toValue: ANIMATION_CONFIG.logoPress.scaleDown,
           duration: ANIMATION_CONFIG.logoPress.duration,
           useNativeDriver: true,
         }),
-        Animated.spring(logoScale, {
+        Animated.spring(pressAnim, {
           toValue: 1,
           tension: ANIMATION_CONFIG.logoPress.tension,
           friction: ANIMATION_CONFIG.logoPress.friction,
@@ -156,77 +146,52 @@ export const HeroSection: React.FC<HeroSectionProps> = memo(
         }),
       ]).start();
 
-      onLogoPress();
-    }, [onLogoPress, logoScale]);
-
-    // Render stat item
-    const renderStatItem = useCallback(
-      (stat: (typeof HERO_STATS)[0], index: number) => (
-        <React.Fragment key={stat.icon}>
-          <View style={styles.featureItem}>
-            <Ionicons
-              name={stat.icon as any}
-              size={isTinyDevice ? 16 : 20}
-              color={colors.secondary[500]}
-            />
-            <Text style={styles.featureText}>{stat.value}</Text>
-          </View>
-          {index < HERO_STATS.length - 1 && (
-            <View style={styles.featureDivider} />
-          )}
-        </React.Fragment>
-      ),
-      []
-    );
+      onLogoPress?.();
+    }, [onLogoPress, pressAnim]);
 
     return (
       <Animated.View style={[styles.heroContainer, { opacity: fadeAnim }]}>
-        {/* Logo */}
+        {/* Logo with animations */}
         <TouchableOpacity
           onPress={handleLogoPress}
-          activeOpacity={onLogoPress ? 0.9 : 1}
+          activeOpacity={0.9}
           style={styles.logoTouchable}
-          disabled={!onLogoPress}
-          accessible={true}
-          accessibilityLabel="לוגו GYMoveo"
-          accessibilityHint={
-            onLogoPress ? "לחץ 3 פעמים למצב מפתחים" : undefined
-          }
         >
-          <View style={styles.logoContainer}>
+          <Animated.View
+            style={[
+              styles.logoContainer,
+              {
+                transform: [
+                  { scale: Animated.multiply(logoScale, breathingAnim) },
+                  { scale: pressAnim },
+                ],
+              },
+            ]}
+          >
             {/* Glow effect */}
             <Animated.View
               style={[
                 styles.logoGlow,
                 {
-                  opacity: glowOpacity,
-                  transform: [{ scale: breathingScale }],
+                  opacity: glowAnim,
                 },
               ]}
             />
+
             {/* Logo icon */}
-            <Animated.View
-              style={[
-                styles.logoIcon,
-                {
-                  transform: [{ scale: logoScale }, { scale: breathingScale }],
-                },
-              ]}
-            >
-              <Ionicons
-                name="barbell"
-                size={isTinyDevice ? 36 : isSmallDevice ? 40 : 48}
-                color={colors.light[50]}
-              />
-            </Animated.View>
-          </View>
+            <View style={styles.logoIcon}>
+              <Text style={{ fontSize: isTinyDevice ? 48 : 56 }}>💪</Text>
+            </View>
+          </Animated.View>
         </TouchableOpacity>
 
         {/* Title */}
         <Animated.View
           style={[
             styles.titleContainer,
-            { transform: [{ translateY: titleSlide }] },
+            {
+              transform: [{ translateX: titleSlide }],
+            },
           ]}
         >
           <Text style={styles.title}>GYMoveo</Text>
@@ -237,25 +202,41 @@ export const HeroSection: React.FC<HeroSectionProps> = memo(
         <Animated.View
           style={[
             styles.subtitleContainer,
-            { transform: [{ translateY: subtitleSlide }] },
+            {
+              transform: [{ translateX: subtitleSlide }],
+            },
           ]}
         >
           <Text style={styles.subtitle}>
-            האפליקציה שתעזור לך להגיע לגרסה הטובה ביותר של עצמך
+            האפליקציה שתוביל אותך{"\n"}לכושר המושלם
           </Text>
         </Animated.View>
 
-        {/* Features/Stats row */}
+        {/* Stats */}
         <Animated.View
           style={[
             styles.featuresRow,
             {
-              opacity: Animated.multiply(fadeAnim, statsOpacity),
-              transform: [{ translateY: subtitleSlide }],
+              opacity: fadeAnim,
+              transform: [{ scale: logoScale }],
             },
           ]}
         >
-          {HERO_STATS.map(renderStatItem)}
+          {HERO_STATS.map((stat, index) => (
+            <React.Fragment key={stat.icon}>
+              <View style={styles.featureItem}>
+                <Ionicons
+                  name={stat.icon as any}
+                  size={isTinyDevice ? 14 : 16}
+                  color={colors.secondary[500]}
+                />
+                <Text style={styles.featureText}>{stat.value}</Text>
+              </View>
+              {index < HERO_STATS.length - 1 && (
+                <View style={styles.featureDivider} />
+              )}
+            </React.Fragment>
+          ))}
         </Animated.View>
 
         {/* Motivational tag */}
@@ -264,11 +245,11 @@ export const HeroSection: React.FC<HeroSectionProps> = memo(
             styles.tagContainer,
             {
               opacity: fadeAnim,
-              transform: [{ scale: breathingScale }],
+              transform: [{ scale: logoScale }],
             },
           ]}
         >
-          <Text style={styles.tagText}>מוכן לשינוי? ✨</Text>
+          <Text style={styles.tagText}>התחל את המסע שלך היום ✨</Text>
         </Animated.View>
       </Animated.View>
     );

@@ -1,6 +1,6 @@
 /**
  * @file screens/welcome/components/GuestButton.tsx
- * @description כפתור כניסה מהירה כאורח
+ * @description כפתור כניסה כאורח עם אנימציות ועיצוב מתקדם
  * @author GYMoveo Development
  * @version 1.0.0
  *
@@ -8,19 +8,19 @@
  * @parent WelcomeScreen
  *
  * @notes
- * - כניסה מהירה ללא הרשמה
- * - ממוקם בתחתית המסך
- * - אנימציית pulse עדינה
+ * - כפתור עם אנימציית פעימה עדינה
+ * - תמיכה בטעינה ומניעת לחיצות כפולות
  * - הודעה על שמירת נתונים זמנית
+ * - נגישות מלאה
  *
  * @changelog
- * - v1.0.0: Initial creation
+ * - v1.0.0: Initial creation with improved animations
  */
 
 import { theme } from "@/styles/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import React, { memo, useCallback, useEffect, useRef } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -31,131 +31,118 @@ import {
   View,
 } from "react-native";
 
-const { colors, spacing, fontSizes, fontWeights, borderRadius } = theme;
+const { colors, spacing, fontSizes, fontWeights, borderRadius, shadows } =
+  theme;
 
 const { width, height } = Dimensions.get("window");
 const isSmallDevice = height < 700;
 const isTinyDevice = height < 600;
 
-// Animation config
-const ANIMATION_CONFIG = {
-  entrance: {
-    duration: 800,
-    delay: 600,
-  },
-  press: {
-    scale: 0.95,
-    speed: 20,
-    bounciness: 5,
-  },
-  hover: {
-    duration: 200,
-  },
-};
-
 interface GuestButtonProps {
-  onGuestLogin: () => void;
-  loading?: boolean;
+  onGuestLogin: () => void | Promise<void>;
+  fadeAnim?: Animated.Value;
   disabled?: boolean;
 }
 
-export const GuestButton: React.FC<GuestButtonProps> = memo(
-  ({ onGuestLogin, loading = false, disabled = false }) => {
-    const scaleAnim = useRef(new Animated.Value(1)).current;
-    const fadeAnim = useRef(new Animated.Value(0)).current;
+/**
+ * Guest login button with pulse animation
+ */
+const GuestButton: React.FC<GuestButtonProps> = memo(
+  ({ onGuestLogin, fadeAnim, disabled = false }) => {
+    const [loading, setLoading] = useState(false);
     const pulseAnim = useRef(new Animated.Value(1)).current;
-
-    // Entrance animation
-    useEffect(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: ANIMATION_CONFIG.entrance.duration,
-        delay: ANIMATION_CONFIG.entrance.delay,
-        useNativeDriver: true,
-      }).start();
-    }, [fadeAnim]);
+    const shimmerAnim = useRef(new Animated.Value(0)).current;
 
     // Pulse animation
     useEffect(() => {
-      if (!disabled && !loading) {
-        const pulseAnimation = Animated.loop(
-          Animated.sequence([
-            Animated.timing(pulseAnim, {
-              toValue: 1.02,
-              duration: 2000,
-              useNativeDriver: true,
-            }),
-            Animated.timing(pulseAnim, {
-              toValue: 1,
-              duration: 2000,
-              useNativeDriver: true,
-            }),
-          ])
-        );
-        pulseAnimation.start();
+      const pulseAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.05,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      pulseAnimation.start();
 
-        return () => {
-          pulseAnimation.stop();
-        };
-      }
-    }, [disabled, loading, pulseAnim]);
+      return () => pulseAnimation.stop();
+    }, [pulseAnim]);
 
-    const handlePressIn = useCallback(() => {
+    // Shimmer animation
+    useEffect(() => {
+      const shimmerAnimation = Animated.loop(
+        Animated.timing(shimmerAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        })
+      );
+      shimmerAnimation.start();
+
+      return () => shimmerAnimation.stop();
+    }, [shimmerAnim]);
+
+    // Handle press with loading state
+    const handlePress = useCallback(async () => {
       if (loading || disabled) return;
 
       if (Platform.OS === "ios") {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
 
-      Animated.spring(scaleAnim, {
-        toValue: ANIMATION_CONFIG.press.scale,
-        speed: ANIMATION_CONFIG.press.speed,
-        bounciness: ANIMATION_CONFIG.press.bounciness,
-        useNativeDriver: true,
-      }).start();
-    }, [loading, disabled, scaleAnim]);
+      setLoading(true);
+      try {
+        await onGuestLogin();
+      } catch (error) {
+        console.error("Guest login error:", error);
+      } finally {
+        setLoading(false);
+      }
+    }, [onGuestLogin, loading, disabled]);
 
-    const handlePressOut = useCallback(() => {
-      if (loading || disabled) return;
-
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        speed: ANIMATION_CONFIG.press.speed,
-        bounciness: ANIMATION_CONFIG.press.bounciness,
-        useNativeDriver: true,
-      }).start();
-
-      setTimeout(() => onGuestLogin(), 100);
-    }, [loading, disabled, scaleAnim, onGuestLogin]);
+    // Shimmer interpolation
+    const shimmerOpacity = shimmerAnim.interpolate({
+      inputRange: [0, 0.5, 1],
+      outputRange: [0, 0.3, 0],
+    });
 
     return (
       <Animated.View
         style={[
           styles.container,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }, { scale: pulseAnim }],
-          },
+          fadeAnim && { opacity: fadeAnim },
+          { transform: [{ scale: pulseAnim }] },
         ]}
       >
         <TouchableOpacity
-          style={[
-            styles.button,
-            (loading || disabled) && styles.buttonDisabled,
-          ]}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          activeOpacity={1}
+          style={[styles.button, disabled && styles.buttonDisabled]}
+          onPress={handlePress}
+          activeOpacity={0.8}
           disabled={loading || disabled}
           accessible={true}
           accessibilityLabel="כניסה כאורח"
-          accessibilityHint="התחל להשתמש באפליקציה ללא צורך בהרשמה"
+          accessibilityHint="לחץ כדי להיכנס לאפליקציה ללא הרשמה"
           accessibilityRole="button"
-          accessibilityState={{
-            disabled: loading || disabled,
-            busy: loading,
-          }}
+          accessibilityState={{ disabled: loading || disabled }}
         >
+          {/* Shimmer effect */}
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFillObject,
+              styles.button,
+              {
+                backgroundColor: colors.light[600],
+                opacity: shimmerOpacity,
+              },
+            ]}
+          />
+
           <View style={styles.contentContainer}>
             {/* Icon */}
             <View
