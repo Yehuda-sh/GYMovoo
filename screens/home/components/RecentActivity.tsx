@@ -1,6 +1,6 @@
 /**
  * @file screens/home/components/RecentActivity.tsx
- * @description קומפוננטה להצגת הפעילות האחרונה של המשתמש
+ * @description קומפוננטה להצגת פעילות אחרונה במסך הבית של Moveo
  * @author GYMoveo Development
  * @version 1.0.1
  *
@@ -8,23 +8,25 @@
  * @parent HomeScreen
  *
  * @notes
- * - מציג רשימת אימונים אחרונים
- * - כולל גרף התקדמות שבועי
- * - תומך במצב אורח (הצגת דמו)
- * - תוקן: החלפת gray ל-dark/light, תיקון routing
+ * - תיקון routing לExpo Router
+ * - הוספת RTL support
+ * - עדכון imports לtheme החדש
+ * - הוספת fallback data
+ * - הוספת proper TypeScript types
+ * - תיקון נתיבי הניווט
  *
  * @changelog
- * - v1.0.0: Initial component creation
- * - v1.0.1: Fixed color references and routing
+ * - v1.0.1: Fixed routing and imports
+ * - v1.0.0: Initial creation
  */
 
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Animated,
+  ActivityIndicator,
   Dimensions,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -32,441 +34,468 @@ import {
   View,
 } from "react-native";
 
-import { useIsGuest } from "@/lib/stores/userStore";
-import theme from "@/styles/theme";
-const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
-  theme;
+// Theme imports - עדכון לimports החדשים
+import { rtlSafe, rtlStyles } from "@/styles/theme/rtl";
+import {
+  unifiedBorderRadius,
+  unifiedColors,
+  unifiedShadows,
+  unifiedSpacing,
+  unifiedTypography,
+} from "@/styles/theme/unifiedDesignSystem";
 
-const { width: screenWidth } = Dimensions.get("window");
-
-interface Activity {
+// Types
+interface RecentActivityItem {
   id: string;
-  date: Date;
-  type: string;
-  duration: number;
-  calories: number;
-  name: string;
-}
-
-interface WeeklyData {
-  day: string;
-  value: number;
-  date: Date;
-}
-
-const RecentActivity = memo(() => {
-  // 🏪 Store hooks
-  const isGuest = useIsGuest();
-
-  // 📊 Local state
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [weeklyData, setWeeklyData] = useState<WeeklyData[]>([]);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-
-  // 🎭 אנימציות
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        delay: 200,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        friction: 8,
-        tension: 40,
-        delay: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [fadeAnim, slideAnim]);
-
-  // 📥 טעינת נתונים
-  useEffect(() => {
-    // דמו דאטה
-    const demoActivities: Activity[] = [
-      {
-        id: "1",
-        date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-        type: "strength",
-        duration: 45,
-        calories: 320,
-        name: "אימון כוח - פלג גוף עליון",
-      },
-      {
-        id: "2",
-        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        type: "cardio",
-        duration: 30,
-        calories: 280,
-        name: 'ריצה - 5 ק"מ',
-      },
-      {
-        id: "3",
-        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        type: "strength",
-        duration: 50,
-        calories: 350,
-        name: "אימון רגליים",
-      },
-    ];
-
-    // נתונים שבועיים
-    const weekData: WeeklyData[] = [];
-    const days = ["ש", "ו", "ה", "ד", "ג", "ב", "א"];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      weekData.push({
-        day: days[6 - i],
-        value: Math.random() > 0.3 ? Math.floor(Math.random() * 60) + 20 : 0,
-        date: date,
-      });
-    }
-
-    setActivities(isGuest ? [] : demoActivities);
-    setWeeklyData(weekData);
-  }, [isGuest]);
-
-  // 🎨 אייקון לפי סוג אימון
-  const getActivityIcon = (type: string) => {
-    const icons = {
-      strength: "barbell",
-      cardio: "bicycle",
-      yoga: "body",
-      sports: "basketball",
-    };
-    return icons[type as keyof typeof icons] || "fitness";
+  type: "workout" | "achievement" | "progress" | "social";
+  title: string;
+  description: string;
+  timestamp: Date;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  metadata?: {
+    duration?: number;
+    calories?: number;
+    exercises?: number;
+    achievement?: string;
+    progress?: number;
   };
+}
 
-  // 📅 פורמט תאריך
-  const formatDate = (date: Date) => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+interface RecentActivityProps {
+  userId?: string;
+  maxItems?: number;
+  onItemPress?: (item: RecentActivityItem) => void;
+  showViewAll?: boolean;
+}
 
-    if (date.toDateString() === today.toDateString()) {
-      return "היום";
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return "אתמול";
-    } else {
-      return date.toLocaleDateString("he-IL", {
-        day: "numeric",
-        month: "short",
-      });
+const { width } = Dimensions.get("window");
+
+/**
+ * קומפוננטה עיקרית לפעילות אחרונה
+ */
+const RecentActivity: React.FC<RecentActivityProps> = ({
+  userId,
+  maxItems = 5,
+  onItemPress,
+  showViewAll = true,
+}) => {
+  const [activities, setActivities] = useState<RecentActivityItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    loadRecentActivities();
+  }, [userId]);
+
+  const loadRecentActivities = async () => {
+    try {
+      setLoading(true);
+      // TODO: Replace with actual API call
+      const mockActivities = getMockActivities();
+      setActivities(mockActivities.slice(0, maxItems));
+    } catch (error) {
+      console.error("Failed to load recent activities:", error);
+      setActivities(getFallbackActivities());
+    } finally {
+      setLoading(false);
     }
   };
 
-  // 📊 חישוב גובה עמודה
-  const getBarHeight = (value: number) => {
-    const maxValue = Math.max(...weeklyData.map((d) => d.value), 1);
-    return (value / maxValue) * 60;
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadRecentActivities();
+    setRefreshing(false);
   };
 
-  return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
-      {/* כותרת */}
-      <View style={styles.header}>
-        <Text style={styles.title}>פעילות אחרונה</Text>
-        <TouchableOpacity
-          onPress={() => router.push("/")} // זמנית - מוביל למסך הבית
-          style={styles.viewAllButton}
-        >
-          <Text style={styles.viewAllText}>הצג הכל</Text>
+  const handleItemPress = (item: RecentActivityItem) => {
+    if (onItemPress) {
+      onItemPress(item);
+      return;
+    }
+
+    // Navigate based on activity type with proper Expo Router paths
+    switch (item.type) {
+      case "workout":
+        router.push("/(tabs)/workouts");
+        break;
+      case "progress":
+        router.push("/(tabs)/progress");
+        break;
+      case "achievement":
+        router.push("/(tabs)/profile");
+        break;
+      case "social":
+        router.push("/(tabs)/social");
+        break;
+      default:
+        router.push("/(tabs)/home");
+    }
+  };
+
+  const handleViewAll = () => {
+    router.push("/(tabs)/activity");
+  };
+
+  const renderActivityItem = (item: RecentActivityItem) => {
+    const timeAgo = getTimeAgo(item.timestamp);
+
+    return (
+      <TouchableOpacity
+        key={item.id}
+        style={[rtlStyles.row, styles.activityItem]}
+        onPress={() => handleItemPress(item)}
+        activeOpacity={0.7}
+      >
+        <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
+          <Ionicons
+            name={item.icon}
+            size={20}
+            color={unifiedColors.background.primary}
+          />
+        </View>
+
+        <View style={[styles.contentContainer, rtlSafe.flex]}>
+          <Text
+            style={[rtlStyles.text, styles.activityTitle]}
+            numberOfLines={1}
+          >
+            {item.title}
+          </Text>
+          <Text
+            style={[rtlStyles.text, styles.activityDescription]}
+            numberOfLines={2}
+          >
+            {item.description}
+          </Text>
+
+          {item.metadata && (
+            <View style={[rtlStyles.row, styles.metadataContainer]}>
+              {item.metadata.duration && (
+                <Text style={[rtlStyles.text, styles.metadataText]}>
+                  {item.metadata.duration} דקות
+                </Text>
+              )}
+              {item.metadata.calories && (
+                <Text style={[rtlStyles.text, styles.metadataText]}>
+                  {item.metadata.calories} קלוריות
+                </Text>
+              )}
+              {item.metadata.exercises && (
+                <Text style={[rtlStyles.text, styles.metadataText]}>
+                  {item.metadata.exercises} תרגילים
+                </Text>
+              )}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.timeContainer}>
+          <Text style={[rtlStyles.text, styles.timeText]}>{timeAgo}</Text>
           <Ionicons
             name="chevron-forward"
             size={16}
-            color={colors.primary[500]}
+            color={unifiedColors.text.tertiary}
+            style={rtlSafe.transform}
           />
-        </TouchableOpacity>
-      </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
-      {/* גרף שבועי */}
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>השבוע שלך</Text>
-        <View style={styles.chart}>
-          {weeklyData.map((data, index) => (
-            <View key={index} style={styles.barContainer}>
-              <View style={styles.barWrapper}>
-                <View
-                  style={[
-                    styles.bar,
-                    {
-                      height: getBarHeight(data.value),
-                      backgroundColor:
-                        data.value > 0
-                          ? colors.primary[500]
-                          : colors.light[300],
-                    },
-                  ]}
-                />
-              </View>
-              <Text style={styles.dayLabel}>{data.day}</Text>
-            </View>
-          ))}
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={[rtlStyles.row, styles.header]}>
+          <Text style={[rtlStyles.text, styles.headerTitle]}>
+            פעילות אחרונה
+          </Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={unifiedColors.primary[500]} />
+          <Text style={[rtlStyles.text, styles.loadingText]}>
+            טוען פעילות...
+          </Text>
         </View>
       </View>
+    );
+  }
 
-      {/* רשימת פעילויות */}
-      {isGuest ? (
-        <TouchableOpacity
-          style={styles.guestPrompt}
-          onPress={() => router.push("/signup")} // זמנית - מוביל להרשמה
-        >
-          <LinearGradient
-            colors={[colors.primary[50], colors.primary[100]]}
-            style={styles.guestCard}
+  return (
+    <View style={styles.container}>
+      <View style={[rtlStyles.row, styles.header]}>
+        <Text style={[rtlStyles.text, styles.headerTitle]}>פעילות אחרונה</Text>
+        {showViewAll && (
+          <TouchableOpacity
+            onPress={handleViewAll}
+            style={styles.viewAllButton}
           >
+            <Text style={[rtlStyles.text, styles.viewAllText]}>צפה בהכל</Text>
             <Ionicons
-              name="lock-closed"
-              size={24}
-              color={colors.primary[600]}
+              name="chevron-forward"
+              size={16}
+              color={unifiedColors.primary[500]}
+              style={rtlSafe.transform}
             />
-            <Text style={styles.guestTitle}>הצג את ההיסטוריה שלך</Text>
-            <Text style={styles.guestText}>
-              הירשם כדי לעקוב אחר ההתקדמות והאימונים שלך
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[unifiedColors.primary[500]]}
+            tintColor={unifiedColors.primary[500]}
+          />
+        }
+      >
+        {activities.length > 0 ? (
+          activities.map(renderActivityItem)
+        ) : (
+          <View style={styles.emptyState}>
+            <Ionicons
+              name="time-outline"
+              size={48}
+              color={unifiedColors.text.tertiary}
+            />
+            <Text style={[rtlStyles.text, styles.emptyStateTitle]}>
+              אין פעילות אחרונה
             </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      ) : (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.activitiesScroll}
-        >
-          {activities.map((activity, index) => (
-            <TouchableOpacity
-              key={activity.id}
-              style={styles.activityCard}
-              onPress={() => router.push("/")} // זמנית - מוביל למסך הבית
-              activeOpacity={0.8}
-            >
-              <View style={styles.activityIcon}>
-                <Ionicons
-                  name={getActivityIcon(activity.type) as any}
-                  size={24}
-                  color={colors.primary[600]}
-                />
-              </View>
-
-              <View style={styles.activityContent}>
-                <Text style={styles.activityName} numberOfLines={1}>
-                  {activity.name}
-                </Text>
-                <Text style={styles.activityDate}>
-                  {formatDate(activity.date)}
-                </Text>
-
-                <View style={styles.activityStats}>
-                  <View style={styles.statChip}>
-                    <Ionicons
-                      name="time-outline"
-                      size={14}
-                      color={colors.dark[600]}
-                    />
-                    <Text style={styles.statValue}>
-                      {activity.duration}ד&apos;
-                    </Text>
-                  </View>
-                  <View style={styles.statChip}>
-                    <Ionicons
-                      name="flame-outline"
-                      size={14}
-                      color={colors.dark[600]}
-                    />
-                    <Text style={styles.statValue}>{activity.calories}</Text>
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-
-          {activities.length === 0 && (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>עדיין אין פעילויות</Text>
-              <TouchableOpacity
-                style={styles.startButton}
-                onPress={() => router.push("/")} // זמנית - מוביל למסך הבית
-              >
-                <Text style={styles.startButtonText}>התחל להתאמן</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </ScrollView>
-      )}
-    </Animated.View>
+            <Text style={[rtlStyles.text, styles.emptyStateDescription]}>
+              התחל להתאמן כדי לראות את הפעילות שלך כאן
+            </Text>
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
-});
+};
 
-RecentActivity.displayName = "RecentActivity";
+// Helper functions
+const getTimeAgo = (timestamp: Date): string => {
+  const now = new Date();
+  const diffMs = now.getTime() - timestamp.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMinutes < 1) return "עכשיו";
+  if (diffMinutes < 60) return `לפני ${diffMinutes} דקות`;
+  if (diffHours < 24) return `לפני ${diffHours} שעות`;
+  if (diffDays < 7) return `לפני ${diffDays} ימים`;
+  return timestamp.toLocaleDateString("he-IL");
+};
+
+const getMockActivities = (): RecentActivityItem[] => [
+  {
+    id: "1",
+    type: "workout",
+    title: "אימון חזה וכתפיים",
+    description: "השלמת אימון מלא עם 8 תרגילים",
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+    icon: "fitness-outline",
+    color: unifiedColors.primary[500],
+    metadata: {
+      duration: 45,
+      calories: 320,
+      exercises: 8,
+    },
+  },
+  {
+    id: "2",
+    type: "achievement",
+    title: "הישג חדש!",
+    description: "השלמת 10 אימונים השבוע",
+    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
+    icon: "trophy-outline",
+    color: unifiedColors.warning[500],
+    metadata: {
+      achievement: "weekly_streak",
+    },
+  },
+  {
+    id: "3",
+    type: "progress",
+    title: "עדכון משקל",
+    description: 'ירידה של 0.5 ק"ג מהשבוע הקודם',
+    timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+    icon: "trending-down-outline",
+    color: unifiedColors.success[500],
+    metadata: {
+      progress: -0.5,
+    },
+  },
+  {
+    id: "4",
+    type: "workout",
+    title: "אימון רגליים",
+    description: "אימון אינטנסיבי של שרירי הרגליים",
+    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+    icon: "walk-outline",
+    color: unifiedColors.secondary[500],
+    metadata: {
+      duration: 60,
+      calories: 450,
+      exercises: 6,
+    },
+  },
+  {
+    id: "5",
+    type: "social",
+    title: "חבר חדש",
+    description: "התחברת עם דני כחבר אימון",
+    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+    icon: "people-outline",
+    color: unifiedColors.accent.teal,
+  },
+];
+
+const getFallbackActivities = (): RecentActivityItem[] => [
+  {
+    id: "fallback-1",
+    type: "workout",
+    title: "אימון לדוגמה",
+    description: "זהו אימון לדוגמה לבדיקת הממשק",
+    timestamp: new Date(Date.now() - 60 * 60 * 1000),
+    icon: "fitness-outline",
+    color: unifiedColors.primary[500],
+    metadata: {
+      duration: 30,
+      calories: 200,
+      exercises: 5,
+    },
+  },
+];
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.xl,
+    backgroundColor: unifiedColors.background.primary,
+    borderRadius: unifiedBorderRadius.card,
+    padding: unifiedSpacing.cardPadding,
+    marginVertical: unifiedSpacing.sm,
+    ...unifiedShadows.card,
   },
+
   header: {
-    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
+    marginBottom: unifiedSpacing.md,
   },
-  title: {
-    fontSize: fontSizes.xl,
-    fontWeight: fontWeights.bold,
-    color: colors.dark[900],
+
+  headerTitle: {
+    fontSize: unifiedTypography.sizes.lg,
+    fontWeight: unifiedTypography.weights.bold,
+    color: unifiedColors.text.primary,
   },
+
   viewAllButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: unifiedSpacing.xs / 2,
   },
+
   viewAllText: {
-    fontSize: fontSizes.sm,
-    color: colors.primary[500],
-    fontWeight: fontWeights.medium,
+    fontSize: unifiedTypography.sizes.sm,
+    color: unifiedColors.primary[500],
+    fontWeight: unifiedTypography.weights.medium,
   },
-  chartContainer: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.light[50],
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+
+  scrollView: {
+    maxHeight: 300,
   },
-  chartTitle: {
-    fontSize: fontSizes.sm,
-    fontWeight: fontWeights.medium,
-    color: colors.dark[700],
-    marginBottom: spacing.md,
-  },
-  chart: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    height: 80,
-  },
-  barContainer: {
-    flex: 1,
+
+  activityItem: {
+    paddingVertical: unifiedSpacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: unifiedColors.border.light,
     alignItems: "center",
   },
-  barWrapper: {
-    height: 60,
-    justifyContent: "flex-end",
-    marginBottom: spacing.xs,
-  },
-  bar: {
-    width: (screenWidth - spacing.lg * 4 - spacing.sm * 6) / 7,
-    borderRadius: borderRadius.xs,
-    minHeight: 4,
-  },
-  dayLabel: {
-    fontSize: fontSizes.xs,
-    color: colors.dark[600],
-    fontWeight: fontWeights.medium,
-  },
-  guestPrompt: {
-    marginHorizontal: spacing.lg,
-  },
-  guestCard: {
-    padding: spacing.xl,
-    borderRadius: borderRadius.lg,
-    alignItems: "center",
-  },
-  guestTitle: {
-    fontSize: fontSizes.lg,
-    fontWeight: fontWeights.semiBold,
-    color: colors.primary[700],
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
-  },
-  guestText: {
-    fontSize: fontSizes.sm,
-    color: colors.primary[600],
-    textAlign: "center",
-  },
-  activitiesScroll: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-  },
-  activityCard: {
-    backgroundColor: colors.light[50],
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    width: 160,
-    ...shadows.sm,
-  },
-  activityIcon: {
+
+  iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primary[100],
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: spacing.md,
+    marginRight: unifiedSpacing.sm,
   },
-  activityContent: {
+
+  contentContainer: {
     flex: 1,
+    paddingRight: unifiedSpacing.sm,
   },
-  activityName: {
-    fontSize: fontSizes.md,
-    fontWeight: fontWeights.semiBold,
-    color: colors.dark[900],
-    marginBottom: spacing.xs,
+
+  activityTitle: {
+    fontSize: unifiedTypography.sizes.md,
+    fontWeight: unifiedTypography.weights.medium,
+    color: unifiedColors.text.primary,
+    marginBottom: unifiedSpacing.xs / 2,
   },
-  activityDate: {
-    fontSize: fontSizes.xs,
-    color: colors.dark[500],
-    marginBottom: spacing.sm,
+
+  activityDescription: {
+    fontSize: unifiedTypography.sizes.sm,
+    color: unifiedColors.text.secondary,
+    marginBottom: unifiedSpacing.xs,
   },
-  activityStats: {
-    flexDirection: "row",
-    gap: spacing.sm,
+
+  metadataContainer: {
+    gap: unifiedSpacing.sm,
   },
-  statChip: {
-    flexDirection: "row",
+
+  metadataText: {
+    fontSize: unifiedTypography.sizes.xs,
+    color: unifiedColors.text.tertiary,
+    backgroundColor: unifiedColors.background.secondary,
+    paddingHorizontal: unifiedSpacing.xs,
+    paddingVertical: unifiedSpacing.xs / 2,
+    borderRadius: unifiedBorderRadius.xs,
+  },
+
+  timeContainer: {
     alignItems: "center",
-    gap: spacing.xs,
-    backgroundColor: colors.light[100],
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
+    gap: unifiedSpacing.xs / 2,
   },
-  statValue: {
-    fontSize: fontSizes.xs,
-    color: colors.dark[700],
-    fontWeight: fontWeights.medium,
+
+  timeText: {
+    fontSize: unifiedTypography.sizes.xs,
+    color: unifiedColors.text.tertiary,
   },
-  emptyState: {
-    width: screenWidth - spacing.lg * 2,
+
+  loadingContainer: {
+    alignItems: "center",
     justifyContent: "center",
+    paddingVertical: unifiedSpacing.xl,
+  },
+
+  loadingText: {
+    fontSize: unifiedTypography.sizes.sm,
+    color: unifiedColors.text.secondary,
+    marginTop: unifiedSpacing.sm,
+  },
+
+  emptyState: {
     alignItems: "center",
-    paddingVertical: spacing.xxl,
+    justifyContent: "center",
+    paddingVertical: unifiedSpacing.xl,
   },
-  emptyText: {
-    fontSize: fontSizes.md,
-    color: colors.dark[500],
-    marginBottom: spacing.md,
+
+  emptyStateTitle: {
+    fontSize: unifiedTypography.sizes.md,
+    fontWeight: unifiedTypography.weights.medium,
+    color: unifiedColors.text.primary,
+    marginTop: unifiedSpacing.sm,
+    marginBottom: unifiedSpacing.xs,
   },
-  startButton: {
-    backgroundColor: colors.primary[500],
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-  },
-  startButtonText: {
-    fontSize: fontSizes.sm,
-    fontWeight: fontWeights.semiBold,
-    color: colors.light[50],
+
+  emptyStateDescription: {
+    fontSize: unifiedTypography.sizes.sm,
+    color: unifiedColors.text.secondary,
+    textAlign: "center",
+    lineHeight: 20,
   },
 });
 
