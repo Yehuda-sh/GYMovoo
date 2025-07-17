@@ -2,14 +2,16 @@
  * @file styles/theme/rtl.ts
  * @description תמיכה בעברית וכיוון RTL
  * @author GYMoveo Development
- * @version 1.0.0
+ * @version 1.1.0
  *
  * @notes
  * - סגנונות RTL לכל הקומפוננטות
  * - פונקציות עזר ל-RTL
  * - תמיכה מלאה בעברית
+ * - הוספת rtlHelpers export
  *
  * @changelog
+ * - v1.1.0: Added rtlHelpers export and missing functions
  * - v1.0.0: Initial creation
  */
 
@@ -41,6 +43,10 @@ export const rtlStyles = {
     flexDirection: isRTL ? "row" : "row-reverse",
   } as ViewStyle,
 
+  column: {
+    flexDirection: "column",
+  } as ViewStyle,
+
   // יישור
   alignStart: {
     alignItems: isRTL ? "flex-end" : "flex-start",
@@ -67,6 +73,11 @@ export const rtlStyles = {
   absoluteEnd: {
     position: "absolute" as const,
     [isRTL ? "left" : "right"]: 0,
+  } as ViewStyle,
+
+  // scroll view
+  scroll: {
+    // אין שינוי מיוחד נדרש
   } as ViewStyle,
 };
 
@@ -128,6 +139,42 @@ export const rtlIcon = {
 
   // אייקונים שלא צריכים היפוך
   noFlip: {} as ViewStyle,
+};
+
+// ===== 🛠️ הלפרים נוספים =====
+export const rtlHelpers = {
+  /**
+   * מחזיר שם אייקון מותאם לכיוון
+   */
+  flipIcon: (iconName: string): string => {
+    const iconMap: { [key: string]: string } = {
+      "chevron-forward": isRTL ? "chevron-back" : "chevron-forward",
+      "chevron-back": isRTL ? "chevron-forward" : "chevron-back",
+      "arrow-forward": isRTL ? "arrow-back" : "arrow-forward",
+      "arrow-back": isRTL ? "arrow-forward" : "arrow-back",
+    };
+    return iconMap[iconName] || iconName;
+  },
+
+  /**
+   * מחזיר ערך מותאם לכיוון
+   */
+  directionValue: <T>(ltrValue: T, rtlValue: T): T => {
+    return isRTL ? rtlValue : ltrValue;
+  },
+
+  /**
+   * מחזיר margin/padding לפי כיוון
+   */
+  marginHorizontal: (start: number, end: number): ViewStyle => ({
+    [isRTL ? "marginRight" : "marginLeft"]: start,
+    [isRTL ? "marginLeft" : "marginRight"]: end,
+  }),
+
+  paddingHorizontal: (start: number, end: number): ViewStyle => ({
+    [isRTL ? "paddingRight" : "paddingLeft"]: start,
+    [isRTL ? "paddingLeft" : "paddingRight"]: end,
+  }),
 };
 
 // ===== 📱 סגנונות לקומפוננטות נפוצות =====
@@ -281,6 +328,7 @@ export const rtl = {
   safe: rtlSafe,
   strings: rtlStrings,
   animation: rtlAnimation,
+  helpers: rtlHelpers,
 };
 
 // ייצוא ברירת מחדל

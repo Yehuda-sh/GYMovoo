@@ -2,7 +2,7 @@
  * @file screens/home/components/QuickStats.tsx
  * @description קומפוננטה להצגת סטטיסטיקות מהירות במסך הבית
  * @author GYMoveo Development
- * @version 1.0.1
+ * @version 2.0.0
  *
  * @component QuickStats
  * @parent HomeScreen
@@ -11,11 +11,13 @@
  * - מציג 4 סטטיסטיקות עיקריות
  * - אנימציות ספירה למספרים
  * - תמיכה במצב אורח/דמו
- * - זמנית: כל הנתיבים מובילים למסך הבית
+ * - תמיכה מלאה ב-RTL
+ * - שימוש ב-unifiedDesignSystem
  *
  * @changelog
- * - v1.0.0: Initial component creation
+ * - v2.0.0: Updated to use unifiedDesignSystem + RTL support
  * - v1.0.1: Fixed routing and React hooks dependencies
+ * - v1.0.0: Initial component creation
  */
 
 import { Ionicons } from "@expo/vector-icons";
@@ -29,10 +31,14 @@ import {
   View,
 } from "react-native";
 
-import theme from "@/styles/theme";
-
-const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
-  theme;
+import { rtlHelpers, rtlStyles } from "@/styles/theme/rtl";
+import {
+  unifiedBorderRadius,
+  unifiedColors,
+  unifiedShadows,
+  unifiedSpacing,
+  unifiedTypography,
+} from "@/styles/theme/unifiedDesignSystem";
 
 interface QuickStatsProps {
   stats: {
@@ -106,25 +112,19 @@ const QuickStatCard = memo(
             <Ionicons name={icon} size={24} color={color} />
           </View>
           <View style={styles.textContainer}>
-            <View style={styles.valueRow}>
+            <View style={[rtlStyles.row, styles.valueRow]}>
               {value > 0 ? (
-                <Animated.Text style={styles.statValue}>
-                  {
-                    animatedValue
-                      .interpolate({
-                        inputRange: [0, value],
-                        outputRange: ["0", value.toString()],
-                      })
-                      .toString()
-                      .split(".")[0]
-                  }
+                <Animated.Text style={[rtlStyles.text, styles.statValue]}>
+                  {Math.round(animatedValue._value)}
                 </Animated.Text>
               ) : (
-                <Text style={styles.statValue}>{value}</Text>
+                <Text style={[rtlStyles.text, styles.statValue]}>0</Text>
               )}
-              {unit && <Text style={styles.statUnit}>{unit}</Text>}
+              {unit && (
+                <Text style={[rtlStyles.text, styles.statUnit]}>{unit}</Text>
+              )}
             </View>
-            <Text style={styles.statLabel}>{label}</Text>
+            <Text style={[rtlStyles.text, styles.statLabel]}>{label}</Text>
           </View>
         </Animated.View>
       </TouchableOpacity>
@@ -132,153 +132,143 @@ const QuickStatCard = memo(
   }
 );
 
-QuickStatCard.displayName = "QuickStatCard";
-
-const QuickStats = memo(({ stats }: QuickStatsProps) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      delay: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [fadeAnim]);
-
-  const statItems: QuickStatProps[] = [
+const QuickStats: React.FC<QuickStatsProps> = memo(({ stats }) => {
+  const statsData = [
     {
-      icon: "barbell",
+      icon: "fitness-outline" as keyof typeof Ionicons.glyphMap,
       label: "אימונים השבוע",
       value: stats.workoutsThisWeek,
-      color: colors.primary[500],
-      onPress: () => router.push("/"), // זמנית - מוביל למסך הבית
+      color: unifiedColors.primary,
+      onPress: () => router.push("/(tabs)/workouts"),
     },
     {
-      icon: "flame",
+      icon: "flame-outline" as keyof typeof Ionicons.glyphMap,
       label: "רצף נוכחי",
       value: stats.currentStreak,
       unit: "ימים",
-      color: colors.status.error[500],
-      onPress: () => router.push("/"), // זמנית - מוביל למסך הבית
+      color: unifiedColors.secondary,
+      onPress: () => router.push("/(tabs)/progress"),
     },
     {
-      icon: "time",
+      icon: "time-outline" as keyof typeof Ionicons.glyphMap,
       label: "דקות החודש",
       value: stats.minutesThisMonth,
-      color: colors.status.success[500],
-      onPress: () => router.push("/"), // זמנית - מוביל למסך הבית
+      unit: "דק'",
+      color: unifiedColors.accent,
+      onPress: () => router.push("/(tabs)/progress"),
     },
     {
-      icon: "trophy",
+      icon: "trophy-outline" as keyof typeof Ionicons.glyphMap,
       label: "שיאים אישיים",
       value: stats.personalRecords,
-      color: colors.status.warning[500],
-      onPress: () => router.push("/"), // זמנית - מוביל למסך הבית
+      color: unifiedColors.success,
+      onPress: () => router.push("/(tabs)/progress"),
     },
   ];
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <View style={styles.header}>
-        <Text style={styles.title}>הסטטיסטיקות שלך</Text>
+    <View style={styles.container}>
+      <View style={[rtlStyles.row, styles.header]}>
+        <Text style={[rtlStyles.text, styles.title]}>הסטטיסטיקות שלי</Text>
         <TouchableOpacity
-          onPress={() => router.push("/")} // זמנית - מוביל למסך הבית
-          style={styles.viewAllButton}
+          style={[rtlStyles.row, styles.viewAllButton]}
+          onPress={() => router.push("/(tabs)/progress")}
         >
-          <Text style={styles.viewAllText}>הצג הכל</Text>
+          <Text style={[rtlStyles.text, styles.viewAllText]}>צפה בהכל</Text>
           <Ionicons
-            name="chevron-forward"
+            name={rtlHelpers.flipIcon("chevron-forward")}
             size={16}
-            color={colors.primary[500]}
+            color={unifiedColors.primary}
           />
         </TouchableOpacity>
       </View>
 
       <View style={styles.statsGrid}>
-        {statItems.map((stat, index) => (
-          <QuickStatCard key={index} {...stat} />
+        {statsData.map((stat, index) => (
+          <QuickStatCard
+            key={index}
+            icon={stat.icon}
+            label={stat.label}
+            value={stat.value}
+            unit={stat.unit}
+            color={stat.color}
+            onPress={stat.onPress}
+          />
         ))}
       </View>
-    </Animated.View>
+    </View>
   );
 });
 
-QuickStats.displayName = "QuickStats";
-
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.xl,
+    marginBottom: unifiedSpacing.lg,
   },
   header: {
-    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
+    paddingHorizontal: unifiedSpacing.lg,
+    marginBottom: unifiedSpacing.md,
   },
   title: {
-    fontSize: fontSizes.xl,
-    fontWeight: fontWeights.bold,
-    color: colors.dark[900],
+    ...unifiedTypography.heading.h3,
+    color: unifiedColors.text,
   },
   viewAllButton: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: unifiedSpacing.xs,
   },
   viewAllText: {
-    fontSize: fontSizes.sm,
-    color: colors.primary[500],
-    fontWeight: fontWeights.medium,
+    ...unifiedTypography.body.medium,
+    color: unifiedColors.primary,
   },
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: spacing.md,
-    gap: spacing.md,
+    paddingHorizontal: unifiedSpacing.md,
+    gap: unifiedSpacing.md,
   },
   statCard: {
     flex: 1,
     minWidth: "45%",
-    backgroundColor: colors.light[50],
-    borderRadius: borderRadius.lg,
-    ...shadows.sm,
+    backgroundColor: unifiedColors.surface,
+    borderRadius: unifiedBorderRadius.lg,
+    ...unifiedShadows.small,
   },
   statContent: {
-    padding: spacing.lg,
+    padding: unifiedSpacing.lg,
   },
   iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: borderRadius.full,
+    borderRadius: unifiedBorderRadius.full,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: spacing.sm,
+    marginBottom: unifiedSpacing.sm,
   },
   textContainer: {
     flex: 1,
   },
   valueRow: {
-    flexDirection: "row",
     alignItems: "baseline",
-    gap: spacing.xs,
+    gap: unifiedSpacing.xs,
   },
   statValue: {
-    fontSize: fontSizes.xxl,
-    fontWeight: fontWeights.bold,
-    color: colors.dark[900],
+    ...unifiedTypography.heading.h2,
+    color: unifiedColors.text,
   },
   statUnit: {
-    fontSize: fontSizes.sm,
-    color: colors.dark[600],
-    fontWeight: fontWeights.regular,
+    ...unifiedTypography.body.small,
+    color: unifiedColors.textSecondary,
   },
   statLabel: {
-    fontSize: fontSizes.sm,
-    color: colors.dark[600],
-    marginTop: spacing.xs,
+    ...unifiedTypography.body.small,
+    color: unifiedColors.textSecondary,
+    marginTop: unifiedSpacing.xs,
   },
 });
+
+QuickStatCard.displayName = "QuickStatCard";
+QuickStats.displayName = "QuickStats";
 
 export default QuickStats;

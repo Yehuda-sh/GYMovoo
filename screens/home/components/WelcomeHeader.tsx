@@ -2,7 +2,7 @@
  * @file screens/home/components/WelcomeHeader.tsx
  * @description קומפוננטת כותרת ברוכים הבאים למסך הבית
  * @author GYMoveo Development
- * @version 1.0.1
+ * @version 2.0.0
  *
  * @component WelcomeHeader
  * @parent HomeScreen
@@ -11,21 +11,27 @@
  * - מציג ברכה אישית למשתמש
  * - תמיכה במצב אורח ודמו
  * - ברכה דינמית לפי שעת היום
- * - תוקן: החלפת gray לצבעים קיימים
+ * - תמיכה מלאה ב-RTL
+ * - שימוש ב-unifiedDesignSystem
  *
  * @changelog
- * - v1.0.0: Initial component creation
+ * - v2.0.0: Updated to use unifiedDesignSystem + RTL support
  * - v1.0.1: Fixed gray color references
+ * - v1.0.0: Initial component creation
  */
 
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import theme from "@/styles/theme";
-
-const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
-  theme;
+import { rtlStyles } from "@/styles/theme/rtl";
+import {
+  unifiedBorderRadius,
+  unifiedColors,
+  unifiedShadows,
+  unifiedSpacing,
+  unifiedTypography,
+} from "@/styles/theme/unifiedDesignSystem";
 
 interface WelcomeHeaderProps {
   userName: string;
@@ -50,13 +56,17 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
-        <View>
-          <Text style={styles.greeting}>{getGreeting()},</Text>
-          <View style={styles.nameRow}>
-            <Text style={styles.userName}>{userName}</Text>
-            {isGuest && <Text style={styles.badge}>אורח</Text>}
-            {isDemo && <Text style={styles.badge}>דמו</Text>}
+      <View style={[rtlStyles.row, styles.content]}>
+        <View style={rtlStyles.column}>
+          <Text style={[rtlStyles.text, styles.greeting]}>
+            {getGreeting()},
+          </Text>
+          <View style={[rtlStyles.row, styles.nameRow]}>
+            <Text style={[rtlStyles.text, styles.userName]}>{userName}</Text>
+            {isGuest && (
+              <Text style={[rtlStyles.text, styles.badge]}>אורח</Text>
+            )}
+            {isDemo && <Text style={[rtlStyles.text, styles.badge]}>דמו</Text>}
           </View>
         </View>
 
@@ -66,13 +76,13 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
           activeOpacity={0.7}
         >
           <View style={styles.profileIconContainer}>
-            <Ionicons name="person" size={24} color={colors.primary[500]} />
+            <Ionicons name="person" size={24} color={unifiedColors.primary} />
           </View>
         </TouchableOpacity>
       </View>
 
       {/* Motivational message */}
-      <Text style={styles.motivationalText}>
+      <Text style={[rtlStyles.text, styles.motivationalText]}>
         {isGuest ? "התחל את המסע שלך לכושר מושלם! 💪" : "בוא נעשה את זה! 🔥"}
       </Text>
     </View>
@@ -81,48 +91,44 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    padding: spacing.lg,
-    paddingTop: spacing.xl,
+    padding: unifiedSpacing.lg,
+    paddingTop: unifiedSpacing.xl,
   },
   content: {
-    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.md,
+    marginBottom: unifiedSpacing.md,
   },
   greeting: {
-    fontSize: fontSizes.sm,
-    color: colors.dark[600],
-    marginBottom: spacing.xs,
+    ...unifiedTypography.body.small,
+    color: unifiedColors.textSecondary,
+    marginBottom: unifiedSpacing.xs,
   },
   nameRow: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
+    gap: unifiedSpacing.sm,
   },
   userName: {
-    fontSize: fontSizes.xxl,
-    fontWeight: fontWeights.bold,
-    color: colors.dark[900],
+    ...unifiedTypography.heading.h2,
+    color: unifiedColors.text,
   },
   badge: {
-    fontSize: fontSizes.xs,
-    fontWeight: fontWeights.medium,
-    color: colors.light[50],
-    backgroundColor: colors.primary[500],
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.md,
+    ...unifiedTypography.caption.medium,
+    color: unifiedColors.background,
+    backgroundColor: unifiedColors.primary,
+    paddingHorizontal: unifiedSpacing.sm,
+    paddingVertical: unifiedSpacing.xs,
+    borderRadius: unifiedBorderRadius.md,
     overflow: "hidden",
   },
   profileButton: {
     width: 48,
     height: 48,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.light[100],
+    borderRadius: unifiedBorderRadius.full,
+    backgroundColor: unifiedColors.surface,
     justifyContent: "center",
     alignItems: "center",
-    ...shadows.sm,
+    ...unifiedShadows.small,
   },
   profileIconContainer: {
     width: 48,
@@ -131,11 +137,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   motivationalText: {
-    fontSize: fontSizes.md,
-    color: colors.dark[700],
-    fontWeight: fontWeights.regular,
+    ...unifiedTypography.body.medium,
+    color: unifiedColors.textSecondary,
     lineHeight: 22,
   },
 });
+
+WelcomeHeader.displayName = "WelcomeHeader";
 
 export default WelcomeHeader;

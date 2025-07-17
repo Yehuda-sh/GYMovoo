@@ -2,7 +2,7 @@
  * @file screens/home/components/QuickActions.tsx
  * @description קומפוננטה לפעולות מהירות במסך הבית
  * @author GYMoveo Development
- * @version 1.0.3
+ * @version 2.0.0
  *
  * @component QuickActions
  * @parent HomeScreen
@@ -11,13 +11,15 @@
  * - כפתורי גישה מהירה לפעולות נפוצות
  * - אנימציות לחיצה
  * - תמיכה במצב אורח
- * - תוקן: כל בעיות הצבעים
+ * - תמיכה מלאה ב-RTL
+ * - שימוש ב-unifiedDesignSystem
  *
  * @changelog
- * - v1.0.0: Initial component creation
- * - v1.0.1: Fixed TypeScript errors and router navigation
- * - v1.0.2: Fixed theme import to use default export
+ * - v2.0.0: Updated to use unifiedDesignSystem + RTL support
  * - v1.0.3: Fixed all color references
+ * - v1.0.2: Fixed theme import to use default export
+ * - v1.0.1: Fixed TypeScript errors and router navigation
+ * - v1.0.0: Initial component creation
  */
 
 import { Ionicons } from "@expo/vector-icons";
@@ -35,10 +37,15 @@ import {
 } from "react-native";
 
 import { useIsGuest } from "@/lib/stores/userStore";
-import theme from "@/styles/theme";
-
-const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
-  theme;
+import { rtlHelpers, rtlStyles } from "@/styles/theme/rtl";
+import {
+  unifiedBorderRadius,
+  unifiedColors,
+  unifiedGradients,
+  unifiedShadows,
+  unifiedSpacing,
+  unifiedTypography,
+} from "@/styles/theme/unifiedDesignSystem";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -52,313 +59,293 @@ interface QuickAction {
   requiresAuth?: boolean;
 }
 
-const quickActions: QuickAction[] = [
-  {
-    id: "new-workout",
-    title: "אימון חדש",
-    subtitle: "התחל אימון",
-    icon: "add-circle",
-    colors: [colors.primary[500], colors.primary[600]],
-    route: "/workouts/new",
-  },
-  {
-    id: "my-programs",
-    title: "התוכניות שלי",
-    subtitle: "צפה ונהל",
-    icon: "calendar",
-    colors: [colors.secondary[500], colors.secondary[600]],
-    route: "/programs",
-    requiresAuth: true,
-  },
-  {
-    id: "exercises",
-    title: "מאגר תרגילים",
-    subtitle: "חפש תרגילים",
-    icon: "search",
-    colors: [colors.status.success, colors.status.successDark],
-    route: "/exercises",
-  },
-  {
-    id: "nutrition",
-    title: "תזונה",
-    subtitle: "מעקב קלוריות",
-    icon: "nutrition",
-    colors: [colors.status.warning, colors.status.warningDark],
-    route: "/nutrition",
-    requiresAuth: true,
-  },
-  {
-    id: "challenges",
-    title: "אתגרים",
-    subtitle: "הצטרף לאתגר",
-    icon: "trophy",
-    colors: [colors.status.error, colors.status.errorDark],
-    route: "/challenges",
-  },
-  {
-    id: "community",
-    title: "קהילה",
-    subtitle: "פורומים וטיפים",
-    icon: "people",
-    colors: [colors.primary[600], colors.secondary[500]],
-    route: "/community",
-  },
-];
+const QuickActions: React.FC = memo(() => {
+  const isGuest = useIsGuest();
+  const scaleValues = useRef(new Map<string, Animated.Value>()).current;
 
-const QuickActionCard = memo(
-  ({
-    action,
-    isGuest,
-    index,
-  }: {
-    action: QuickAction;
-    isGuest: boolean;
-    index: number;
-  }) => {
-    const scaleAnim = useRef(new Animated.Value(1)).current;
-    const fadeAnim = useRef(new Animated.Value(0)).current;
+  const quickActions: QuickAction[] = [
+    {
+      id: "start-workout",
+      title: "התחל אימון",
+      subtitle: "אימון מהיר וקל",
+      icon: "fitness-outline",
+      colors: unifiedGradients.primary,
+      route: "/workouts/start",
+      requiresAuth: false,
+    },
+    {
+      id: "view-progress",
+      title: "התקדמות",
+      subtitle: "צפה בנתונים שלך",
+      icon: "trending-up-outline",
+      colors: unifiedGradients.secondary,
+      route: "/progress",
+      requiresAuth: true,
+    },
+    {
+      id: "exercises",
+      title: "תרגילים",
+      subtitle: "ספריית תרגילים",
+      icon: "barbell-outline",
+      colors: unifiedGradients.accent,
+      route: "/exercises",
+      requiresAuth: false,
+    },
+    {
+      id: "nutrition",
+      title: "תזונה",
+      subtitle: "מעקב תזונתי",
+      icon: "nutrition-outline",
+      colors: unifiedGradients.success,
+      route: "/nutrition",
+      requiresAuth: true,
+    },
+  ];
 
-    // אנימציית כניסה
-    React.useEffect(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 400,
-        delay: index * 50 + 600,
-        useNativeDriver: true,
-      }).start();
-    }, [index, fadeAnim]);
-
-    const handlePressIn = useCallback(() => {
-      Animated.spring(scaleAnim, {
-        toValue: 0.95,
-        tension: 300,
-        friction: 10,
-        useNativeDriver: true,
-      }).start();
-    }, [scaleAnim]);
-
-    const handlePressOut = useCallback(() => {
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 300,
-        friction: 10,
-        useNativeDriver: true,
-      }).start();
-    }, [scaleAnim]);
-
-    const handlePress = useCallback(() => {
-      if (action.requiresAuth && isGuest) {
-        // לאורחים - הצע להירשם
-        router.push("/signup");
-      } else {
-        // זמנית - כל הנתיבים מובילים למסך הבית
-        router.push(action.route as any);
+  const getOrCreateScaleValue = useCallback(
+    (id: string) => {
+      if (!scaleValues.has(id)) {
+        scaleValues.set(id, new Animated.Value(1));
       }
-    }, [action, isGuest]);
+      return scaleValues.get(id)!;
+    },
+    [scaleValues]
+  );
 
-    return (
-      <Animated.View
-        style={[
-          styles.actionCardContainer,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.actionTouchable}
-          onPress={handlePress}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={action.colors}
-            style={styles.actionCard}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+  const handlePressIn = useCallback(
+    (id: string) => {
+      const scaleValue = getOrCreateScaleValue(id);
+      Animated.spring(scaleValue, {
+        toValue: 0.95,
+        useNativeDriver: true,
+        ...unifiedAnimations.spring.default,
+      }).start();
+    },
+    [getOrCreateScaleValue]
+  );
+
+  const handlePressOut = useCallback(
+    (id: string) => {
+      const scaleValue = getOrCreateScaleValue(id);
+      Animated.spring(scaleValue, {
+        toValue: 1,
+        useNativeDriver: true,
+        ...unifiedAnimations.spring.default,
+      }).start();
+    },
+    [getOrCreateScaleValue]
+  );
+
+  const handleActionPress = useCallback(
+    (action: QuickAction) => {
+      if (action.requiresAuth && isGuest) {
+        router.push("/(auth)/welcome");
+        return;
+      }
+
+      router.push(action.route as any);
+    },
+    [isGuest]
+  );
+
+  const renderAction = useCallback(
+    (action: QuickAction) => {
+      const scaleValue = getOrCreateScaleValue(action.id);
+      const isLocked = action.requiresAuth && isGuest;
+
+      return (
+        <View key={action.id} style={styles.actionCardContainer}>
+          <TouchableOpacity
+            style={styles.actionTouchable}
+            onPress={() => handleActionPress(action)}
+            onPressIn={() => handlePressIn(action.id)}
+            onPressOut={() => handlePressOut(action.id)}
+            activeOpacity={0.8}
           >
-            {/* אייקון */}
-            <View style={styles.iconContainer}>
-              <Ionicons name={action.icon} size={24} color={colors.light[50]} />
-            </View>
+            <Animated.View
+              style={[
+                styles.actionCard,
+                {
+                  transform: [{ scale: scaleValue }],
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={action.colors}
+                style={StyleSheet.absoluteFillObject}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
 
-            {/* טקסט */}
-            <View style={styles.textContainer}>
-              <Text style={styles.actionTitle}>{action.title}</Text>
-              <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
-            </View>
-
-            {/* נעילה לאורחים */}
-            {action.requiresAuth && isGuest && (
-              <View style={styles.lockBadge}>
+              <View style={styles.iconContainer}>
                 <Ionicons
-                  name="lock-closed"
-                  size={12}
-                  color={colors.light[50]}
+                  name={action.icon}
+                  size={24}
+                  color={unifiedColors.background}
                 />
               </View>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  }
-);
 
-QuickActionCard.displayName = "QuickActionCard";
+              <View style={styles.textContainer}>
+                <Text style={[rtlStyles.text, styles.actionTitle]}>
+                  {action.title}
+                </Text>
+                <Text style={[rtlStyles.text, styles.actionSubtitle]}>
+                  {action.subtitle}
+                </Text>
+              </View>
 
-const QuickActions = memo(() => {
-  const isGuest = useIsGuest();
+              {isLocked && (
+                <View style={styles.lockBadge}>
+                  <Ionicons
+                    name="lock-closed"
+                    size={12}
+                    color={unifiedColors.background}
+                  />
+                </View>
+              )}
+            </Animated.View>
+          </TouchableOpacity>
+        </View>
+      );
+    },
+    [
+      getOrCreateScaleValue,
+      handleActionPress,
+      handlePressIn,
+      handlePressOut,
+      isGuest,
+    ]
+  );
 
   return (
     <View style={styles.container}>
-      {/* כותרת */}
-      <View style={styles.header}>
-        <Text style={styles.title}>גישה מהירה</Text>
-        <TouchableOpacity
-          onPress={() => router.push("/more")}
-          style={styles.moreButton}
-        >
-          <Text style={styles.moreText}>עוד</Text>
-          <Ionicons name="apps" size={16} color={colors.primary[600]} />
+      <View style={[rtlStyles.row, styles.header]}>
+        <Text style={[rtlStyles.text, styles.title]}>פעולות מהירות</Text>
+        <TouchableOpacity style={[rtlStyles.row, styles.moreButton]}>
+          <Text style={[rtlStyles.text, styles.moreText]}>עוד</Text>
+          <Ionicons
+            name={rtlHelpers.flipIcon("chevron-forward")}
+            size={16}
+            color={unifiedColors.primary}
+          />
         </TouchableOpacity>
       </View>
 
-      {/* רשת פעולות */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.actionsScroll}
-        decelerationRate="fast"
-        snapToInterval={
-          (screenWidth - spacing.lg * 2 - spacing.md) / 2 + spacing.md
-        }
+        style={rtlStyles.scroll}
       >
-        <View style={styles.actionsGrid}>
-          {quickActions.map((action, index) => (
-            <QuickActionCard
-              key={action.id}
-              action={action}
-              isGuest={isGuest}
-              index={index}
-            />
-          ))}
-        </View>
+        <View style={styles.actionsGrid}>{quickActions.map(renderAction)}</View>
       </ScrollView>
 
-      {/* הודעה למשתמשי אורח */}
       {isGuest && (
-        <View style={styles.guestMessage}>
+        <View style={[rtlStyles.row, styles.guestMessage]}>
           <Ionicons
-            name="information-circle"
+            name="information-circle-outline"
             size={16}
-            color={colors.primary[600]}
+            color={unifiedColors.primary}
           />
-          <Text style={styles.guestText}>חלק מהפעולות דורשות הרשמה</Text>
+          <Text style={[rtlStyles.text, styles.guestText]}>
+            התחבר לחשבון כדי לגשת לכל הפיצ&apos;רים
+          </Text>
         </View>
       )}
     </View>
   );
 });
 
-QuickActions.displayName = "QuickActions";
-
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.xl,
+    marginBottom: unifiedSpacing.lg,
   },
   header: {
-    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
+    paddingHorizontal: unifiedSpacing.lg,
+    marginBottom: unifiedSpacing.md,
   },
   title: {
-    fontSize: fontSizes.xl,
-    fontWeight: fontWeights.bold,
-    color: colors.dark[900],
+    ...unifiedTypography.heading.h3,
+    color: unifiedColors.text,
   },
   moreButton: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: unifiedSpacing.xs,
   },
   moreText: {
-    fontSize: fontSizes.sm,
-    color: colors.primary[600],
-    fontWeight: fontWeights.medium,
+    ...unifiedTypography.body.medium,
+    color: unifiedColors.primary,
   },
   actionsScroll: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: unifiedSpacing.lg,
   },
   actionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.md,
+    gap: unifiedSpacing.md,
   },
   actionCardContainer: {
-    width: (screenWidth - spacing.lg * 2 - spacing.md) / 2,
+    width: (screenWidth - unifiedSpacing.lg * 2 - unifiedSpacing.md) / 2,
     height: 120,
   },
   actionTouchable: {
     flex: 1,
-    borderRadius: borderRadius.lg,
+    borderRadius: unifiedBorderRadius.lg,
     overflow: "hidden",
-    ...shadows.md,
+    ...unifiedShadows.medium,
   },
   actionCard: {
     flex: 1,
-    padding: spacing.lg,
+    padding: unifiedSpacing.lg,
     justifyContent: "space-between",
     position: "relative",
   },
   iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.light[50] + "20",
+    borderRadius: unifiedBorderRadius.full,
+    backgroundColor: unifiedColors.background + "20",
     justifyContent: "center",
     alignItems: "center",
   },
   textContainer: {
-    marginTop: spacing.sm,
+    marginTop: unifiedSpacing.sm,
   },
   actionTitle: {
-    fontSize: fontSizes.md,
-    fontWeight: fontWeights.semiBold,
-    color: colors.light[50],
-    marginBottom: spacing.xs,
+    ...unifiedTypography.body.medium,
+    color: unifiedColors.background,
+    marginBottom: unifiedSpacing.xs,
   },
   actionSubtitle: {
-    fontSize: fontSizes.xs,
-    color: colors.light[200],
+    ...unifiedTypography.caption.regular,
+    color: unifiedColors.background + "CC",
   },
   lockBadge: {
     position: "absolute",
-    top: spacing.sm,
-    right: spacing.sm,
+    top: unifiedSpacing.sm,
+    right: unifiedSpacing.sm,
     width: 24,
     height: 24,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.light[50] + "20",
+    borderRadius: unifiedBorderRadius.full,
+    backgroundColor: unifiedColors.background + "20",
     justifyContent: "center",
     alignItems: "center",
   },
   guestMessage: {
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing.xs,
-    marginTop: spacing.lg,
-    paddingHorizontal: spacing.lg,
+    gap: unifiedSpacing.xs,
+    marginTop: unifiedSpacing.lg,
+    paddingHorizontal: unifiedSpacing.lg,
   },
   guestText: {
-    fontSize: fontSizes.sm,
-    color: colors.primary[600],
+    ...unifiedTypography.caption.regular,
+    color: unifiedColors.primary,
   },
 });
+
+QuickActions.displayName = "QuickActions";
 
 export default QuickActions;
