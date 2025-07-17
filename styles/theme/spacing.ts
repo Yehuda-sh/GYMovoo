@@ -1,237 +1,279 @@
 /**
- * 📁 Path: /styles/theme/spacing.ts
- * 📝 Description: מרווחים ומידות - Spacing and dimensions
- * 🔢 Version: 1.0
+ * @file styles/theme/spacing.ts
+ * @description רווחים, מרחקים ומימדים - Spacing, dimensions and layout
+ * @author GYMoveo Development
+ * @version 1.0.0
  *
- * 🔗 Dependencies: None
+ * @notes
+ * - מערכת רווחים עקבית
+ * - מימדים סטנדרטיים לקומפוננטות
+ * - גריד ופריסה
  *
- * ⚠️ Based on 8px grid system
+ * @changelog
+ * - v1.0.0: Initial creation with comprehensive spacing system
  */
 
-// 📏 Base unit - יחידת בסיס
-const BASE_UNIT = 8;
+import { Dimensions } from "react-native";
 
-// 📐 Spacing scale - סולם מרווחים
+// מימדי המסך
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
+// ===== 📏 רווחים בסיסיים =====
 export const spacing = {
-  // Micro spacing - מרווחים זעירים
-  xxxs: BASE_UNIT * 0.25, // 2px
-  xxs: BASE_UNIT * 0.5, // 4px
-  xs: BASE_UNIT * 1, // 8px
-
-  // Regular spacing - מרווחים רגילים
-  sm: BASE_UNIT * 1.5, // 12px
-  md: BASE_UNIT * 2, // 16px
-  lg: BASE_UNIT * 3, // 24px
-
-  // Large spacing - מרווחים גדולים
-  xl: BASE_UNIT * 4, // 32px
-  xxl: BASE_UNIT * 5, // 40px
-  xxxl: BASE_UNIT * 6, // 48px
-
-  // Huge spacing - מרווחים ענקיים
-  huge: BASE_UNIT * 8, // 64px
-  giant: BASE_UNIT * 10, // 80px
-  massive: BASE_UNIT * 12, // 96px
+  none: 0,
+  xxxs: 2,
+  xxs: 4,
+  xs: 8,
+  sm: 12,
+  md: 16,
+  lg: 20,
+  xl: 24,
+  xxl: 32,
+  xxxl: 40,
+  huge: 48,
+  massive: 64,
 } as const;
 
-// 📱 Screen dimensions - מידות מסך
+// ===== 📐 מימדים =====
 export const dimensions = {
-  // Screen padding - ריפוד מסך
-  screenPadding: {
-    horizontal: spacing.md,
-    vertical: spacing.lg,
-    top: spacing.xl,
-    bottom: spacing.xl,
+  // גבהים סטנדרטיים
+  height: {
+    tiny: 24,
+    small: 32,
+    medium: 44,
+    large: 56,
+    huge: 72,
+    massive: 96,
   },
 
-  // Safe area insets - אזורים בטוחים
-  safeArea: {
-    top: 44, // iPhone notch
-    bottom: 34, // iPhone home indicator
+  // רוחבים סטנדרטיים
+  width: {
+    tiny: 24,
+    small: 48,
+    medium: 96,
+    large: 144,
+    huge: 192,
+    full: "100%" as const,
   },
 
-  // Component heights - גבהי קומפוננטות
-  heights: {
-    button: {
-      small: 40,
-      medium: 48,
-      large: 56,
+  // כפתורים
+  button: {
+    height: {
+      small: 36,
+      medium: 44,
+      large: 52,
     },
-    input: {
-      small: 40,
-      medium: 48,
-      large: 56,
-    },
-    header: 56,
-    tabBar: 60,
-    card: {
-      small: 120,
-      medium: 180,
-      large: 240,
-    },
-  },
-
-  // Component widths - רוחבי קומפוננטות
-  widths: {
-    button: {
-      minimum: 64,
-      small: 120,
-      medium: 180,
-      large: 240,
-      full: "100%",
-    },
-    card: {
-      minimum: 280,
-      maximum: 400,
-    },
-    modal: {
-      small: 300,
-      medium: 400,
-      large: 500,
+    minWidth: {
+      small: 64,
+      medium: 96,
+      large: 128,
     },
   },
 
-  // Icon sizes - גדלי אייקונים
-  icons: {
-    tiny: 12,
-    small: 16,
+  // אייקונים
+  icon: {
+    tiny: 16,
+    small: 20,
     medium: 24,
     large: 32,
     huge: 48,
   },
 
-  // Avatar sizes - גדלי אווטרים
-  avatars: {
+  // אווטרים
+  avatar: {
     small: 32,
     medium: 48,
     large: 64,
-    xlarge: 96,
-    profile: 120,
+    huge: 96,
+  },
+
+  // קלטים
+  input: {
+    height: {
+      small: 36,
+      medium: 44,
+      large: 52,
+    },
+  },
+
+  // מסך
+  screen: {
+    width: screenWidth,
+    height: screenHeight,
   },
 } as const;
 
-// 🔲 Layout grid - רשת פריסה
+// ===== 🏗️ גריד ופריסה =====
 export const grid = {
+  // מספר עמודות
   columns: 12,
-  gutter: spacing.md,
-  margin: spacing.lg,
 
-  // Breakpoints - נקודות שבירה
+  // רוחב עמודה
+  columnWidth: screenWidth / 12,
+
+  // מרווח בין עמודות
+  gutter: {
+    small: spacing.xs,
+    medium: spacing.md,
+    large: spacing.lg,
+  },
+
+  // breakpoints
   breakpoints: {
-    xs: 0, // Extra small
-    sm: 480, // Small
-    md: 768, // Medium
-    lg: 1024, // Large
-    xl: 1280, // Extra large
+    small: 360,
+    medium: 768,
+    large: 1024,
+    xlarge: 1440,
   },
 } as const;
 
-// 📦 Container sizes - גדלי מכולות
+// ===== 📦 קונטיינרים =====
 export const containers = {
-  xs: 320,
-  sm: 480,
-  md: 768,
-  lg: 1024,
-  xl: 1280,
-  fluid: "100%",
+  // padding פנימי
+  padding: {
+    small: spacing.sm,
+    medium: spacing.md,
+    large: spacing.lg,
+    screen: spacing.xl,
+  },
+
+  // רוחב מקסימלי
+  maxWidth: {
+    small: 320,
+    medium: 768,
+    large: 1024,
+    full: "100%" as const,
+  },
+
+  // מרווחים בין אלמנטים
+  gap: {
+    tiny: spacing.xxs,
+    small: spacing.xs,
+    medium: spacing.sm,
+    large: spacing.md,
+    huge: spacing.lg,
+  },
 } as const;
 
-// 🎯 Z-index scale - סולם שכבות
+// ===== 📍 מיקומים =====
+export const positions = {
+  // עבור position absolute
+  absolute: {
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    center: "50%" as const,
+  },
+
+  // offsets נפוצים
+  offset: {
+    small: spacing.xs,
+    medium: spacing.md,
+    large: spacing.xl,
+  },
+} as const;
+
+// ===== 📊 סדר שכבות (z-index) =====
 export const zIndex = {
   behind: -1,
   base: 0,
-  dropdown: 1000,
-  sticky: 1100,
-  header: 1200,
-  overlay: 1300,
-  modal: 1400,
-  popover: 1500,
-  tooltip: 1600,
-  notification: 1700,
-  maximum: 9999,
+  content: 1,
+  elevated: 10,
+  dropdown: 100,
+  sticky: 200,
+  fixed: 300,
+  modalBackdrop: 400,
+  modal: 500,
+  popover: 600,
+  tooltip: 700,
+  toast: 800,
+  alert: 900,
+  maximum: 999,
 } as const;
 
-// 🏃 Animation distances - מרחקי אנימציה
-export const animationDistances = {
-  slideShort: spacing.xs,
-  slideMedium: spacing.md,
-  slideLong: spacing.xl,
-  fadeOffset: spacing.sm,
-} as const;
+// ===== 🔧 פונקציות עזר =====
 
-// 📏 Helper functions - פונקציות עזר
-
-// יצירת מרווח דינמי - Create dynamic spacing
-export const getSpacing = (multiplier: number): number => {
-  return BASE_UNIT * multiplier;
+/**
+ * חישוב רווח רספונסיבי
+ */
+export const responsiveSpacing = (
+  small: number,
+  medium: number,
+  large: number
+): number => {
+  if (screenWidth < grid.breakpoints.medium) return small;
+  if (screenWidth < grid.breakpoints.large) return medium;
+  return large;
 };
 
-// יצירת ריפוד - Create padding
+/**
+ * יצירת מרווח אחיד
+ */
 export const createPadding = (
-  vertical: keyof typeof spacing = "md",
-  horizontal: keyof typeof spacing = "md"
+  vertical: keyof typeof spacing,
+  horizontal: keyof typeof spacing
 ) => ({
   paddingVertical: spacing[vertical],
   paddingHorizontal: spacing[horizontal],
 });
 
-// יצירת שוליים - Create margin
+/**
+ * יצירת מרווח חיצוני
+ */
 export const createMargin = (
-  vertical: keyof typeof spacing = "md",
-  horizontal: keyof typeof spacing = "md"
+  vertical: keyof typeof spacing,
+  horizontal: keyof typeof spacing
 ) => ({
   marginVertical: spacing[vertical],
   marginHorizontal: spacing[horizontal],
 });
 
-// בדיקת מסך קטן - Check if small screen
-export const isSmallScreen = (width: number): boolean => {
-  return width < grid.breakpoints.sm;
+/**
+ * מרווח לפי כיוון
+ */
+export const directionalSpacing = (
+  top: keyof typeof spacing,
+  right: keyof typeof spacing,
+  bottom: keyof typeof spacing,
+  left: keyof typeof spacing
+) => ({
+  marginTop: spacing[top],
+  marginRight: spacing[right],
+  marginBottom: spacing[bottom],
+  marginLeft: spacing[left],
+});
+
+// ===== 📱 מימדים דינמיים =====
+export const dynamicDimensions = {
+  // אחוזים מגובה המסך
+  vh: (percent: number) => (screenHeight * percent) / 100,
+
+  // אחוזים מרוחב המסך
+  vw: (percent: number) => (screenWidth * percent) / 100,
+
+  // המימד הקטן יותר
+  vmin: (percent: number) =>
+    (Math.min(screenWidth, screenHeight) * percent) / 100,
+
+  // המימד הגדול יותר
+  vmax: (percent: number) =>
+    (Math.max(screenWidth, screenHeight) * percent) / 100,
 };
 
-// קבלת ריפוד מסך מותאם - Get responsive screen padding
-export const getScreenPadding = (screenWidth: number) => {
-  if (screenWidth < grid.breakpoints.sm) {
-    return spacing.sm;
-  } else if (screenWidth < grid.breakpoints.md) {
-    return spacing.md;
-  } else {
-    return spacing.lg;
-  }
+// ===== 🎯 ייצוא נוחות =====
+export const layout = {
+  spacing,
+  dimensions,
+  grid,
+  containers,
+  positions,
+  zIndex,
+  helpers: {
+    responsiveSpacing,
+    createPadding,
+    createMargin,
+    directionalSpacing,
+  },
+  dynamic: dynamicDimensions,
 };
-
-// 🎨 Common layouts - פריסות נפוצות
-export const commonLayouts = {
-  // מרווח בין אלמנטים ברשימה - List item spacing
-  listItemSpacing: spacing.sm,
-
-  // מרווח בין כרטיסים - Card spacing
-  cardSpacing: spacing.md,
-
-  // מרווח בין סקציות - Section spacing
-  sectionSpacing: spacing.xl,
-
-  // ריפוד כפתור - Button padding
-  buttonPadding: {
-    vertical: spacing.sm,
-    horizontal: spacing.lg,
-  },
-
-  // ריפוד קלט - Input padding
-  inputPadding: {
-    vertical: spacing.sm,
-    horizontal: spacing.md,
-  },
-
-  // ריפוד כרטיס - Card padding
-  cardPadding: {
-    small: spacing.sm,
-    medium: spacing.md,
-    large: spacing.lg,
-  },
-} as const;
-
-// 🔧 Type exports - ייצוא טיפוסים
-export type SpacingKeys = keyof typeof spacing;
-export type DimensionKeys = keyof typeof dimensions;
-export type ZIndexKeys = keyof typeof zIndex;
