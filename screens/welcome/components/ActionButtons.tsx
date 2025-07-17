@@ -1,7 +1,7 @@
 /**
  * @file screens/welcome/components/ActionButtons.tsx
  * @description כפתורי הפעולה הראשיים - התחברות והרשמה
- * @author GYMoveo Development
+ * @author GYMovoo Development
  * @version 1.0.0
  *
  * @component ActionButtons
@@ -17,8 +17,7 @@
  * - v1.0.0: Initial creation with gradients and animations
  */
 
-import { theme } from "@/styles/theme";
-import { unifiedDesignSystem } from "@/styles/theme/unifiedDesignSystem";
+import theme from "@/styles/theme";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { memo, useCallback, useRef } from "react";
@@ -34,12 +33,10 @@ import {
 
 const { colors, spacing, fontSizes, fontWeights, borderRadius, shadows } =
   theme;
-const { gradients } = unifiedDesignSystem.colors;
 
-const { width, height } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 const isSmallDevice = height < 700;
 const isTinyDevice = height < 600;
-
 interface ActionButtonsProps {
   buttonsSlide: Animated.Value;
   onLogin: () => void;
@@ -113,7 +110,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = memo(
             accessibilityState={{ disabled }}
           >
             <LinearGradient
-              colors={gradients.primary}
+              colors={color.gradients.primary}
               style={[styles.primaryButton, disabled && styles.buttonDisabled]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}

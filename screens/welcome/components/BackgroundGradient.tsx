@@ -17,7 +17,7 @@
  * - v1.0.0: Initial creation with particles and animations
  */
 
-import { theme } from "@/styles/theme";
+import theme from "@/styles/theme";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { memo, useEffect, useMemo, useRef } from "react";

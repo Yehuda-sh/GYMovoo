@@ -17,7 +17,7 @@
  * - v1.0.0: Initial creation with improved animations
  */
 
-import { theme } from "@/styles/theme";
+import theme from "@/styles/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";

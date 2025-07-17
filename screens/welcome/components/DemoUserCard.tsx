@@ -1,7 +1,7 @@
 /**
  * @file screens/welcome/components/DemoUserCard.tsx
  * @description כרטיס משתמש דמו למסך Welcome
- * @author GYMoveo Development
+ * @author GYMovoo Development
  * @version 1.0.0
  *
  * @component DemoUserCard
@@ -9,7 +9,7 @@
  *
  * @notes
  * - מציג פרטי משתמש דמו באופן ויזואלי
- * - כולל אנימציות וגרדיאנטים
+ * - כולל אנימציות וגרדיאנטים מותאמים
  * - מתאים למצב לילה
  *
  * @changelog
@@ -27,10 +27,13 @@ import {
   View,
 } from "react-native";
 
-import theme from "@/styles/theme";
-
-const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
-  theme;
+import {
+  borderRadius,
+  colors,
+  fontSizes,
+  fontWeights,
+  spacing,
+} from "@/styles/theme";
 
 interface DemoUserCardProps {
   id: string;
@@ -67,11 +70,11 @@ const DemoUserCard: React.FC<DemoUserCardProps> = memo(
     const getGradientColors = () => {
       switch (level?.toLowerCase()) {
         case "מתקדם":
-          return [colors.status.error, colors.primary[700]];
+          return ["#6366f1", "#ff4757"] as const;
         case "ביניים":
-          return [colors.primary[600], colors.primary[800]];
+          return ["#667eea", "#5a67d8"] as const;
         default:
-          return [colors.status.success, colors.primary[600]];
+          return ["#667eea", "#00ff88"] as const;
       }
     };
 
@@ -114,33 +117,27 @@ const DemoUserCard: React.FC<DemoUserCardProps> = memo(
             {/* Avatar Circle */}
             <View style={styles.avatarContainer}>
               <LinearGradient
-                colors={[`${colors.light[50]}20`, `${colors.light[50]}10`]}
+                colors={["rgba(255,255,255,0.1)", "rgba(255,255,255,0.05)"]}
                 style={styles.avatarGradient}
               >
-                <Text style={styles.avatarText}>{name.charAt(0)}</Text>
+                <Text style={styles.avatarText}>
+                  {name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
+                </Text>
               </LinearGradient>
             </View>
 
-            {/* Info Section */}
+            {/* Info Container */}
             <View style={styles.infoContainer}>
               <Text style={styles.name}>{name}</Text>
+              <Text style={styles.demoButtonSubtext}>
+                לחץ כדי להיכנס כ{name}
+              </Text>
 
-              {/* Details Row */}
+              {/* Details */}
               <View style={styles.detailsContainer}>
-                <View style={styles.detailRow}>
-                  <Ionicons
-                    name="school-outline"
-                    size={12}
-                    color={colors.light[400]}
-                    style={styles.detailIcon}
-                  />
-                  <Text style={styles.demoButtonDetails}>
-                    {level || "מתחיל"}
-                  </Text>
-                </View>
-
-                <View style={styles.detailDivider} />
-
                 <View style={styles.detailRow}>
                   <Ionicons
                     name={getIcon() as any}
@@ -152,22 +149,27 @@ const DemoUserCard: React.FC<DemoUserCardProps> = memo(
                     {goal || "כושר כללי"}
                   </Text>
                 </View>
+                <View style={styles.detailDivider} />
+                <View style={styles.detailRow}>
+                  <Ionicons
+                    name="trending-up"
+                    size={12}
+                    color={colors.light[400]}
+                    style={styles.detailIcon}
+                  />
+                  <Text style={styles.demoButtonDetails}>
+                    {level || "מתחיל"}
+                  </Text>
+                </View>
               </View>
             </View>
 
-            {/* Age Badge */}
+            {/* Age Tag */}
             {age && (
               <View style={styles.ageTag}>
                 <Text style={styles.ageText}>{age}</Text>
               </View>
             )}
-
-            {/* Arrow */}
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={colors.light[400]}
-            />
           </LinearGradient>
         </TouchableOpacity>
       </Animated.View>

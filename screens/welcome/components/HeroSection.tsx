@@ -16,8 +16,7 @@
  * @changelog
  * - v1.0.0: Initial creation
  */
-
-import { theme } from "@/styles/theme";
+import theme from "@/styles/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { memo, useCallback, useEffect, useRef } from "react";
@@ -31,8 +30,7 @@ import {
   View,
 } from "react-native";
 
-const { colors, spacing, fontSizes, fontWeights, borderRadius, shadows } =
-  theme;
+const { colors, spacing, fontWeights, borderRadius, shadows } = theme;
 
 const { width, height } = Dimensions.get("window");
 const isSmallDevice = height < 700;

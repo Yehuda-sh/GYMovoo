@@ -1,7 +1,7 @@
 /**
  * @file screens/welcome/components/SocialLoginButtons.tsx
  * @description כפתורי התחברות חברתית עם אנימציות
- * @author GYMoveo Development
+ * @author GYMovoo Development
  * @version 1.0.0
  *
  * @component SocialLoginButtons
@@ -17,7 +17,7 @@
  * - v1.0.0: Initial creation with modern design
  */
 
-import { theme } from "@/styles/theme";
+import theme from "@/styles/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { memo, useCallback, useRef } from "react";
@@ -35,7 +35,7 @@ import {
 const { colors, spacing, fontSizes, fontWeights, borderRadius, shadows } =
   theme;
 
-const { width, height } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 const isSmallDevice = height < 700;
 
 // Social platform configs
@@ -91,26 +91,20 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = memo(
     }, [loading, loadingOpacity]);
 
     // Handle button animations
-    const handlePressIn = useCallback((scale: Animated.Value) => {
-      if (Platform.OS === "ios") {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-      Animated.spring(scale, {
-        toValue: 0.95,
-        tension: 300,
-        friction: 10,
-        useNativeDriver: true,
-      }).start();
-    }, []);
-
-    const handlePressOut = useCallback((scale: Animated.Value) => {
-      Animated.spring(scale, {
-        toValue: 1,
-        tension: 300,
-        friction: 10,
-        useNativeDriver: true,
-      }).start();
-    }, []);
+    const animateButtonPress = useCallback(
+      (scale: Animated.Value, isPress: boolean) => {
+        if (isPress && Platform.OS === "ios") {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+        Animated.spring(scale, {
+          toValue: isPress ? 0.95 : 1,
+          tension: 300,
+          friction: 10,
+          useNativeDriver: true,
+        }).start();
+      },
+      []
+    );
 
     // Render social button
     const renderSocialButton = useCallback(
@@ -121,7 +115,7 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = memo(
       ) => {
         const config = SOCIAL_CONFIGS[platform];
         const buttonColors = config.colors;
-        const iconName = platform === "google" ? "logo-google" : "logo-apple";
+        const iconName = config.icon;
         const buttonText = platform === "google" ? "Google" : "Apple";
 
         return (
@@ -135,10 +129,12 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = memo(
             <TouchableOpacity
               style={[
                 styles.socialButton,
-                { backgroundColor: buttonColors.light },
+                { backgroundColor: buttonColors.light[0] },
                 loading && styles.disabledButton,
               ]}
               onPress={onPress}
+              onPressIn={() => animateButtonPress(scale, true)}
+              onPressOut={() => animateButtonPress(scale, false)}
               activeOpacity={0.8}
               disabled={loading}
               accessible={true}
@@ -173,7 +169,7 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = memo(
           </Animated.View>
         );
       },
-      [loading, loadingOpacity, isSmallDevice]
+      [loading, loadingOpacity, animateButtonPress]
     );
 
     // Show only Google on Android

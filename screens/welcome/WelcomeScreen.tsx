@@ -1,7 +1,7 @@
 /**
  * @file screens/welcome/WelcomeScreen.tsx
  * @description מסך הכניסה הראשי של האפליקציה
- * @author GYMoveo Development
+ * @author GYMovoo Development
  * @version 1.0.0
  *
  * @component WelcomeScreen
@@ -17,10 +17,6 @@
  * - v1.0.0: Initial screen creation with full functionality
  */
 
-import { demoUsers } from "@/constants/demoUsers";
-import { clearAllData } from "@/lib/data/storage";
-import { useUserStore } from "@/lib/stores/userStore";
-import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useRef, useState } from "react";
@@ -36,7 +32,19 @@ import {
   View,
 } from "react-native";
 
-import theme from "@/styles/theme";
+import { DEMO_USERS } from "@/constants/demoUsers";
+import { clearAllData } from "@/lib/data/storage";
+import { useUserStore } from "@/lib/stores/userStore";
+import { supabase } from "@/lib/supabase";
+import {
+  borderRadius,
+  colors,
+  fontSizes,
+  fontWeights,
+  shadows,
+  spacing,
+} from "@/styles/theme";
+
 import {
   ActionButtons,
   BackgroundGradient,
@@ -46,9 +54,6 @@ import {
   SocialLoginButtons,
   useWelcomeAnimations,
 } from "./components";
-
-const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
-  theme;
 
 // תיקון עבור OAuth redirects
 WebBrowser.maybeCompleteAuthSession();
@@ -60,7 +65,7 @@ const WelcomeScreen = () => {
   // 📊 State
   const [loading, setLoading] = useState(false);
   const [showDevModal, setShowDevModal] = useState(false);
-  const { signInAsGuest, signInWithDemo } = useUserStore();
+  const { becomeGuest, loginAsDemoUser } = useUserStore();
 
   // 🎬 Animation refs for modal
   const modalOpacity = useRef(new Animated.Value(0)).current;
@@ -68,7 +73,7 @@ const WelcomeScreen = () => {
 
   // 👆 Dev panel trigger
   const devTapCount = useRef(0);
-  const devTapTimer = useRef<NodeJS.Timeout>();
+  const devTapTimer = useRef<NodeJS.Timeout | null>(null);
 
   const handleLogoTap = useCallback(() => {
     devTapCount.current += 1;
@@ -118,149 +123,157 @@ const WelcomeScreen = () => {
     });
   }, [modalOpacity, modalScale]);
 
-  // 🚀 Navigation handlers
-  const handleLogin = useCallback(() => {
-    router.push("/login");
-  }, []);
-
-  const handleSignup = useCallback(() => {
-    router.push("/signup");
-  }, []);
-
-  // 👤 Guest login
-  const handleGuestLogin = useCallback(async () => {
+  // 🔐 Authentication handlers
+  const handleLogin = async () => {
     try {
       setLoading(true);
-      await signInAsGuest();
-      router.replace("/(tabs)/home");
+      router.push("/login");
     } catch (error) {
-      Alert.alert("שגיאה", "לא הצלחנו להתחבר כאורח");
+      console.error("Login navigation error:", error);
     } finally {
       setLoading(false);
     }
-  }, [signInAsGuest]);
+  };
 
-  // 🎮 Demo login
-  const handleDemoLogin = useCallback(
-    async (userId: string) => {
-      try {
-        setLoading(true);
-        const demoUser = demoUsers.find((u) => u.id === userId);
-        if (demoUser) {
-          await signInWithDemo(demoUser);
-          closeDevModal();
-          router.replace("/(tabs)/home");
-        }
-      } catch (error) {
-        Alert.alert("שגיאה", "לא הצלחנו להתחבר כמשתמש דמו");
-      } finally {
-        setLoading(false);
+  const handleSignup = async () => {
+    try {
+      setLoading(true);
+      router.push("/signup");
+    } catch (error) {
+      console.error("Signup navigation error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🎭 Demo user handlers
+  const handleDemoLogin = async (userId: string) => {
+    try {
+      setLoading(true);
+      const demoUser = DEMO_USERS.find((u) => u.email === userId);
+
+      if (!demoUser) {
+        throw new Error("Demo user not found");
       }
-    },
-    [signInWithDemo, closeDevModal]
-  );
 
-  // 🗑️ Reset data
-  const handleResetData = useCallback(async () => {
-    Alert.alert(
-      "איפוס נתונים",
-      "פעולה זו תמחק את כל הנתונים המקומיים. האם להמשיך?",
-      [
-        { text: "ביטול", style: "cancel" },
-        {
-          text: "אפס",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await clearAllData();
-              Alert.alert("הצלחה", "כל הנתונים אופסו");
-            } catch (error) {
-              Alert.alert("שגיאה", "לא הצלחנו לאפס את הנתונים");
-            }
-          },
-        },
-      ]
-    );
-  }, []);
+      // Sign in with demo user
+      await loginAsDemoUser(demoUser);
+
+      // Navigate to home
+      router.replace("/(tabs)/home");
+
+      closeDevModal();
+    } catch (error) {
+      console.error("Demo login error:", error);
+      Alert.alert("שגיאה", "לא ניתן להתחבר למשתמש הדמו");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🚶 Guest login
+  const handleGuestLogin = async () => {
+    try {
+      setLoading(true);
+
+      // Sign in as guest
+      becomeGuest();
+
+      // Navigate to home
+      router.replace("/(tabs)/home");
+    } catch (error) {
+      console.error("Guest login error:", error);
+      Alert.alert("שגיאה", "לא ניתן להיכנס כאורח");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🧹 Data reset
+  const handleResetData = async () => {
+    try {
+      setLoading(true);
+      await clearAllData();
+      Alert.alert("הצלחה", "כל הנתונים נמחקו בהצלחה");
+    } catch (error) {
+      console.error("Reset data error:", error);
+      Alert.alert("שגיאה", "לא ניתן למחוק את הנתונים");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 🌐 Social login handlers
-  const handleGoogleLogin = useCallback(async () => {
+  const handleGoogleLogin = async () => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: {
-          redirectTo: Platform.select({
-            web: window.location.origin,
-            default: "gymovoo://auth/callback",
-          }),
-        },
       });
+
       if (error) throw error;
     } catch (error) {
-      Alert.alert("שגיאה", "לא הצלחנו להתחבר עם Google");
+      console.error("Google login error:", error);
+      Alert.alert("שגיאה", "לא ניתן להתחבר עם Google");
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  const handleAppleLogin = useCallback(async () => {
+  const handleFacebookLogin = async () => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: "apple",
-        options: {
-          redirectTo: Platform.select({
-            web: window.location.origin,
-            default: "gymovoo://auth/callback",
-          }),
-        },
+        provider: "facebook",
       });
+
       if (error) throw error;
     } catch (error) {
-      Alert.alert("שגיאה", "לא הצלחנו להתחבר עם Apple");
+      console.error("Facebook login error:", error);
+      Alert.alert("שגיאה", "לא ניתן להתחבר עם Facebook");
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
+
+  // Convert demo users for panel
+  const demoUsersForPanel = DEMO_USERS.map((user) => ({
+    id: user.email,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar,
+    level: user.level,
+    goal: "כושר כללי",
+    isDemo: true,
+  }));
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent
+      />
 
-      {/* 🌈 Background gradient */}
+      {/* 🎨 Background */}
       <BackgroundGradient visible={true} />
 
-      {/* 🎯 Main content */}
+      {/* 🎭 Main Content */}
       <View style={styles.content}>
-        {/* Hero section with logo */}
-        <HeroSection
-          fadeAnim={animations.fadeAnim}
-          scaleAnim={animations.scaleAnim}
-          onLogoTap={handleLogoTap}
-        />
+        {/* 🏠 Hero Section */}
+        <HeroSection fadeAnim={animations.fadeAnim} />
 
-        {/* Action buttons */}
-        <ActionButtons
-          slideAnim={animations.slideAnim}
-          onLogin={handleLogin}
-          onSignup={handleSignup}
-          loading={loading}
-        />
+        {/* 🎯 Action Buttons */}
+        <ActionButtons onLogin={handleLogin} onSignup={handleSignup} />
 
-        {/* Social login */}
-        <SocialLoginButtons
-          fadeAnim={animations.socialFadeAnim}
-          onGoogleLogin={handleGoogleLogin}
-          onAppleLogin={handleAppleLogin}
-          loading={loading}
-        />
+        {/* 🌐 Social Login */}
+        <SocialLoginButtons onGoogleLogin={handleGoogleLogin} />
 
-        {/* Guest button */}
-        <GuestButton onGuestLogin={handleGuestLogin} loading={loading} />
+        {/* 🚶 Guest Button */}
+        <GuestButton onGuestLogin={handleGuestLogin} />
       </View>
 
-      {/* 🔧 Dev Modal */}
+      {/* 🔒 Dev Modal */}
       <Modal
         visible={showDevModal}
         transparent={true}
@@ -294,7 +307,7 @@ const WelcomeScreen = () => {
               </TouchableOpacity>
 
               <DevPanel
-                demoUsers={demoUsers}
+                demoUsers={demoUsersForPanel}
                 onSelectUser={handleDemoLogin}
                 onResetData={handleResetData}
                 isLoading={loading}
@@ -314,10 +327,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: spacing.xl,
-    paddingTop: Platform.OS === "ios" ? 60 : 40,
+    paddingHorizontal: spacing.lg,
+    paddingTop: Platform.OS === "ios" ? spacing.xl * 2 : spacing.xl,
     paddingBottom: spacing.xl,
   },
+  // Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.8)",
@@ -328,14 +342,12 @@ const styles = StyleSheet.create({
     width: "90%",
     maxWidth: 400,
     maxHeight: "80%",
-    backgroundColor: colors.dark[800],
-    borderRadius: borderRadius.xl,
-    ...shadows.lg,
   },
   modalContent: {
-    flex: 1,
+    backgroundColor: colors.dark[800],
     borderRadius: borderRadius.xl,
-    overflow: "hidden",
+    padding: spacing.lg,
+    ...shadows.lg,
   },
   closeButton: {
     position: "absolute",
@@ -344,13 +356,13 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: borderRadius.full,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: colors.dark[700],
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
   },
   closeButtonText: {
-    color: colors.light[300],
+    color: colors.light[400],
     fontSize: fontSizes.lg,
     fontWeight: fontWeights.bold,
   },
