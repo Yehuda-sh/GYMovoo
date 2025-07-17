@@ -2,7 +2,7 @@
  * @file screens/home/HomeScreen.tsx
  * @description מסך הבית הראשי של האפליקציה
  * @author GYMoveo Development
- * @version 1.0.2
+ * @version 1.0.3
  *
  * @component HomeScreen
  * @parent App
@@ -11,12 +11,13 @@
  * - מסך ראשי לאחר התחברות/כניסת אורח
  * - מרכז את כל הקומפוננטות של מסך הבית
  * - תומך ברענון pull-to-refresh
- * - תוקן: כל בעיות הצבעים והייבואים
+ * - תוקן: כל בעיות הצבעים, הייבואים ו-QuickStats interface
  *
  * @changelog
- * - v1.0.0: Initial screen creation
- * - v1.0.1: Fixed color references
+ * - v1.0.3: Fixed QuickStats interface and theme imports
  * - v1.0.2: Fixed all color and import issues
+ * - v1.0.1: Fixed color references
+ * - v1.0.0: Initial screen creation
  */
 
 import { Ionicons } from "@expo/vector-icons";
@@ -38,7 +39,13 @@ import {
   useUser,
   useUserStore,
 } from "@/lib/stores/userStore";
-import theme from "@/styles/theme";
+import {
+  borderRadius,
+  colors,
+  fontSizes,
+  fontWeights,
+  spacing,
+} from "@/styles/theme";
 
 import {
   MotivationalQuote,
@@ -48,9 +55,6 @@ import {
   TodayWorkout,
   WelcomeHeader,
 } from "./components";
-
-const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
-  theme;
 
 const HomeScreen = () => {
   // 🏪 Store hooks
@@ -107,13 +111,13 @@ const HomeScreen = () => {
           onProfilePress={() => router.push("/profile")}
         />
 
-        {/* 📊 Quick stats */}
+        {/* 📊 Quick stats - תיקון interface */}
         <QuickStats
           stats={{
             workoutsThisWeek: isDemo ? 3 : 0,
             currentStreak: isDemo ? 5 : 0,
             minutesThisMonth: isDemo ? 240 : 0,
-            personalRecords: isDemo ? 2 : 0,
+            personalRecords: isDemo ? 7 : 0,
           }}
         />
 
@@ -123,29 +127,25 @@ const HomeScreen = () => {
         {/* 📈 Recent activity */}
         <RecentActivity />
 
-        {/* 💭 Motivational quote */}
+        {/* 💡 Motivational quote */}
         <MotivationalQuote />
 
-        {/* 🎯 Quick actions */}
+        {/* ⚡ Quick actions */}
         <QuickActions />
 
-        {/* 🚪 Sign out button (temporary) */}
-        {!isGuest && (
-          <View style={styles.signOutContainer}>
-            <TouchableOpacity
-              style={styles.signOutButton}
-              onPress={handleSignOut}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="log-out-outline"
-                size={20}
-                color={colors.status.error}
-              />
-              <Text style={styles.signOutText}>התנתק</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* 🚪 Sign out button (temp) */}
+        <TouchableOpacity
+          style={styles.signOutButton}
+          onPress={handleSignOut}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name="log-out-outline"
+            size={20}
+            color={colors.status.error}
+          />
+          <Text style={styles.signOutText}>התנתק</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -160,29 +160,27 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: spacing.xxxl + 60, // Tab bar height
-  },
-  signOutContainer: {
-    padding: spacing.lg,
-    marginTop: spacing.xl,
+    flexGrow: 1,
+    paddingBottom: spacing.xl,
   },
   signOutButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.sm,
-    backgroundColor: colors.light[50],
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.xl,
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
+    backgroundColor: colors.status.error + "10",
     borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.light[300],
-    ...shadows.sm,
+    borderColor: colors.status.error + "20",
   },
   signOutText: {
     fontSize: fontSizes.md,
     fontWeight: fontWeights.medium,
     color: colors.status.error,
+    textAlign: "center",
   },
 });
 

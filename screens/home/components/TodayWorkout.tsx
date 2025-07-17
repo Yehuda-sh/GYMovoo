@@ -2,7 +2,7 @@
  * @file screens/home/components/TodayWorkout.tsx
  * @description קומפוננטה להצגת האימון היומי במסך הבית
  * @author GYMoveo Development
- * @version 1.0.1
+ * @version 1.0.2
  *
  * @component TodayWorkout
  * @parent HomeScreen
@@ -11,11 +11,12 @@
  * - מציג אימון מתוכנן להיום או הצעה לאימון חדש
  * - כולל אנימציה בטעינה
  * - תומך במצב אורח ומצב משתמש רשום
- * - תוקן: שימוש בצבעי status מ-theme, החלפת gray
+ * - תוקן: routing, imports, והסרת בעיות TypeScript
  *
  * @changelog
- * - v1.0.0: Initial component creation
+ * - v1.0.2: Fixed routing, imports, and TypeScript errors
  * - v1.0.1: Fixed status colors and React hooks dependencies
+ * - v1.0.0: Initial component creation
  */
 
 import { Ionicons } from "@expo/vector-icons";
@@ -27,14 +28,19 @@ import {
   Animated,
   StyleSheet,
   Text,
+  TextStyle,
   TouchableOpacity,
   View,
 } from "react-native";
 
 import { useIsGuest } from "@/lib/stores/userStore";
-import theme from "@/styles/theme";
-const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
-  theme;
+import {
+  borderRadius,
+  colors,
+  fontSizes,
+  fontWeights,
+  spacing,
+} from "@/styles/theme";
 
 interface Workout {
   id: string;
@@ -97,25 +103,11 @@ const TodayWorkout = memo(() => {
     loadWorkout();
   }, [isGuest]);
 
-  // 🎨 רכיב טעינה
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <LinearGradient
-          colors={[colors.primary[500] + "10", colors.primary[600] + "10"]}
-          style={styles.loadingCard}
-        >
-          <ActivityIndicator size="large" color={colors.primary[500]} />
-        </LinearGradient>
-      </View>
-    );
-  }
-
   // 🎯 הפניה לאימון
   const handleStartWorkout = () => {
     if (isGuest) {
       // למשתמשי אורח - הפניה להרשמה
-      router.push("/signup");
+      router.push("/(auth)/welcome");
     } else if (todayWorkout) {
       // למשתמשים רשומים - הפניה לאימון (זמנית למסך הבית)
       router.push("/");
@@ -138,12 +130,26 @@ const TodayWorkout = memo(() => {
   // 🎨 צבע רקע לפי קושי
   const getDifficultyColor = (difficulty: string) => {
     const colorMap = {
-      beginner: colors.status.success[500],
-      intermediate: colors.status.warning[500],
-      advanced: colors.status.error[500],
+      beginner: colors.status.success,
+      intermediate: colors.status.warning,
+      advanced: colors.status.error,
     };
     return colorMap[difficulty as keyof typeof colorMap] || colors.primary[500];
   };
+
+  // 🎨 רכיב טעינה
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={[colors.primary[500] + "10", colors.primary[600] + "10"]}
+          style={styles.loadingCard}
+        >
+          <ActivityIndicator size="large" color={colors.primary[500]} />
+        </LinearGradient>
+      </View>
+    );
+  }
 
   return (
     <Animated.View
@@ -178,7 +184,7 @@ const TodayWorkout = memo(() => {
                 size={24}
                 color={colors.light[50]}
               />
-              <Text style={styles.title}>
+              <Text style={[styles.textRtl, styles.title]}>
                 {todayWorkout ? "האימון שלך להיום" : "אין אימון מתוכנן"}
               </Text>
             </View>
@@ -193,7 +199,7 @@ const TodayWorkout = memo(() => {
                   },
                 ]}
               >
-                <Text style={styles.difficultyText}>
+                <Text style={[styles.textRtl, styles.difficultyText]}>
                   {getDifficultyLabel(todayWorkout.difficulty)}
                 </Text>
               </View>
@@ -203,7 +209,9 @@ const TodayWorkout = memo(() => {
           {/* תוכן */}
           {todayWorkout ? (
             <View style={styles.content}>
-              <Text style={styles.workoutName}>{todayWorkout.name}</Text>
+              <Text style={[styles.textRtl, styles.workoutName]}>
+                {todayWorkout.name}
+              </Text>
 
               {/* נתונים */}
               <View style={styles.statsRow}>
@@ -213,7 +221,7 @@ const TodayWorkout = memo(() => {
                     size={18}
                     color={colors.light[300]}
                   />
-                  <Text style={styles.statText}>
+                  <Text style={[styles.textRtl, styles.statText]}>
                     {todayWorkout.duration} דקות
                   </Text>
                 </View>
@@ -226,7 +234,7 @@ const TodayWorkout = memo(() => {
                     size={18}
                     color={colors.light[300]}
                   />
-                  <Text style={styles.statText}>
+                  <Text style={[styles.textRtl, styles.statText]}>
                     {todayWorkout.exercises} תרגילים
                   </Text>
                 </View>
@@ -234,11 +242,15 @@ const TodayWorkout = memo(() => {
 
               {/* שרירי מטרה */}
               <View style={styles.musclesContainer}>
-                <Text style={styles.musclesLabel}>שרירי מטרה:</Text>
+                <Text style={[styles.textRtl, styles.musclesLabel]}>
+                  שרירי מטרה:
+                </Text>
                 <View style={styles.musclesList}>
                   {todayWorkout.targetMuscles.map((muscle, index) => (
                     <View key={index} style={styles.muscleTag}>
-                      <Text style={styles.muscleText}>{muscle}</Text>
+                      <Text style={[styles.textRtl, styles.muscleText]}>
+                        {muscle}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -246,7 +258,7 @@ const TodayWorkout = memo(() => {
             </View>
           ) : (
             <View style={styles.emptyContent}>
-              <Text style={styles.emptyText}>
+              <Text style={[styles.textRtl, styles.emptyText]}>
                 {isGuest
                   ? "הירשם כדי לקבל תוכנית אימונים מותאמת אישית"
                   : "לחץ כדי לבחור אימון להיום"}
@@ -257,7 +269,7 @@ const TodayWorkout = memo(() => {
           {/* כפתור פעולה */}
           <View style={styles.footer}>
             <View style={styles.actionButton}>
-              <Text style={styles.actionText}>
+              <Text style={[styles.textRtl, styles.actionText]}>
                 {isGuest
                   ? "הירשם עכשיו"
                   : todayWorkout
@@ -285,10 +297,22 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     marginBottom: spacing.xl,
   },
+  // RTL styles
+  textRtl: {
+    textAlign: "right",
+    writingDirection: "rtl",
+  } as TextStyle,
   touchable: {
     borderRadius: borderRadius.xl,
     overflow: "hidden",
-    ...shadows.lg,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
   card: {
     padding: spacing.xl,

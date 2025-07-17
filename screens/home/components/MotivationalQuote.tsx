@@ -2,7 +2,7 @@
  * @file screens/home/components/MotivationalQuote.tsx
  * @description קומפוננטה להצגת ציטוט מוטיבציה יומי
  * @author GYMoveo Development
- * @version 1.0.0
+ * @version 1.0.1
  *
  * @component MotivationalQuote
  * @parent HomeScreen
@@ -11,14 +11,16 @@
  * - מחליף ציטוט כל יום
  * - אנימציה חלקה בטעינה ובמעבר
  * - אפשרות לשתף ציטוט
+ * - תוקן: בעיות ESLint עם imports ו-hooks
  *
  * @changelog
  * - v1.0.0: Initial component creation
+ * - v1.0.1: Fixed ESLint issues
  */
 
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Animated,
   Platform,
@@ -29,9 +31,15 @@ import {
   View,
 } from "react-native";
 
-import theme from "@/styles/theme";
-const { colors, spacing, borderRadius, shadows, fontSizes, fontWeights } =
-  theme;
+// תיקון: import נכון מה-theme
+import {
+  borderRadius,
+  colors,
+  fontSizes,
+  fontWeights,
+  shadows,
+  spacing,
+} from "@/styles/theme";
 
 interface Quote {
   text: string;
@@ -62,7 +70,7 @@ const quotes: Quote[] = [
   },
   {
     text: "הדרך היחידה לעשות עבודה נהדרת היא לאהוב את מה שאתה עושה",
-    author: "סטיב ג׳ובס",
+    author: "סטיב ג'ובס",
     category: "success",
   },
   {
@@ -86,11 +94,13 @@ const MotivationalQuote = memo(() => {
   // 📊 Local state
   const [currentQuote, setCurrentQuote] = useState<Quote>(quotes[0]);
   const [isLiked, setIsLiked] = useState(false);
-  const fadeAnim = new Animated.Value(0);
-  const scaleAnim = new Animated.Value(0.95);
-  const heartScale = new Animated.Value(1);
 
-  // 🎭 אנימציית כניסה
+  // תיקון: אנימציות עם useMemo
+  const fadeAnim = useMemo(() => new Animated.Value(0), []);
+  const scaleAnim = useMemo(() => new Animated.Value(0.95), []);
+  const heartScale = useMemo(() => new Animated.Value(1), []);
+
+  // 🎭 אנימציית כניסה - תיקון dependencies
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -107,7 +117,7 @@ const MotivationalQuote = memo(() => {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, scaleAnim]);
 
   // 📅 בחירת ציטוט יומי
   useEffect(() => {
@@ -124,7 +134,7 @@ const MotivationalQuote = memo(() => {
     setCurrentQuote(quotes[quoteIndex]);
   }, []);
 
-  // ❤️ אנימציית לייק
+  // ❤️ אנימציית לייק - תיקון dependencies
   const handleLike = useCallback(() => {
     setIsLiked(!isLiked);
     Animated.sequence([
@@ -139,7 +149,7 @@ const MotivationalQuote = memo(() => {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [isLiked]);
+  }, [isLiked, heartScale]);
 
   // 📤 שיתוף ציטוט
   const handleShare = useCallback(async () => {
@@ -190,6 +200,7 @@ const MotivationalQuote = memo(() => {
     };
     return colorMap[category as keyof typeof colorMap] || colorMap.motivation;
   };
+
   return (
     <Animated.View
       style={[

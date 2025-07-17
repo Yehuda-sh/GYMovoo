@@ -1,4 +1,3 @@
-```markdown
 # 🚨 CLAUDE - READ THIS FIRST BEFORE ANYTHING ELSE! 🚨
 
 IF YOU DON'T READ THIS FIRST, YOU WILL:
@@ -31,7 +30,6 @@ If NO to any - STOP and read PROJECT_CONTEXT first!
 # 🤖 PROJECT_CONTEXT - הסבר לClaude
 
 ## 📥 מקור הקבצים וזרימת העבודה:
-```
 
 1. אני מעלה קבצים מ-GitHub → Project Knowledge
 2. אתה מחפש אותם ב-project_knowledge_search
@@ -41,18 +39,12 @@ If NO to any - STOP and read PROJECT_CONTEXT first!
 6. אני מרענן את Project Knowledge
 7. ממשיכים מה-checkpoint הבא
 
-```
-
 ## 📌 חשוב להבין:
 
 ### כשאני אומר "תסרוק את הריפו" או "תסרוק את הפרויקט":
 
-```
-
 ❌ לא מתכוון ל: GitHub/GitLab או כל ריפו חיצוני
 ✅ מתכוון ל: הקבצים שהעליתי לProject Knowledge שלך
-
-```
 
 ### הפקודות שלי:
 
@@ -63,14 +55,12 @@ If NO to any - STOP and read PROJECT_CONTEXT first!
 
 ### דוגמאות:
 
-```
-
+```typescript
 // כשאני אומר:
-"תסרוק את app/home.tsx בפרויקט"
+"תסרוק את app/home.tsx בפרויקט";
 
 // אתה צריך להריץ:
-project_knowledge_search("app/home.tsx")
-
+project_knowledge_search("app/home.tsx");
 ```
 
 ## 🎯 זכור:
@@ -83,7 +73,6 @@ project_knowledge_search("app/home.tsx")
 ## 📁 מבנה הפרויקט שלנו:
 
 ```
-
 GYMovoo/ (השם האמיתי של הפרויקט)
 ├── app/ # רק קבצי ניווט Expo Router
 ├── screens/ # כל המסכים (בשורש, לא בתוך app)
@@ -105,18 +94,19 @@ GYMovoo/ (השם האמיתי של הפרויקט)
 ├── services/ # שירותים (API, Analytics, etc.)
 ├── constants/ # קבועים
 └── assets/ # תמונות ופונטים
-
-````
+```
 
 ## 🎨 Design System & Theme:
 
 ### מערכות העיצוב שלנו:
 
 1. **unifiedDesignSystem** - המערכת הראשית לכל האפליקציה
+
    - צבעים, רווחים, טיפוגרפיה, צללים
    - סגנונות מוכנים לכפתורים, כרטיסים, מודאלים
 
 2. **authTheme** - מערכת ייעודית למסכי Auth
+
    - גרדיאנטים מיוחדים
    - אנימציות כניסה
 
@@ -126,9 +116,11 @@ GYMovoo/ (השם האמיתי של הפרויקט)
 
 ### דוגמת שימוש:
 
-
 ```typescript
-import { unifiedColors, unifiedSpacing } from "@/styles/theme/unifiedDesignSystem";
+import {
+  unifiedColors,
+  unifiedSpacing,
+} from "@/styles/theme/unifiedDesignSystem";
 import { rtlStyles, rtlSafe } from "@/styles/theme/rtl";
 
 // בקומפוננטה
@@ -136,8 +128,8 @@ import { rtlStyles, rtlSafe } from "@/styles/theme/rtl";
   <Text style={[rtlStyles.text, { color: unifiedColors.text }]}>
     טקסט בעברית
   </Text>
-</View>
-````
+</View>;
+```
 
 ## 💡 Coding Patterns חשובים:
 
@@ -216,6 +208,59 @@ try {
 - **תמיד השתמש ב-unifiedDesignSystem לעיצוב**
 - **תמיד הוסף RTL support לקומפוננטות חדשות**
 
+---
+
+## 🔥 **חדש! סגנון העבודה עם TypeScript/ESLint Errors**
+
+### כשאני שולח שגיאות TypeScript/ESLint:
+
+#### ❌ אל תעשה:
+
+- **אל תסכם** "הושלם הכל" או "מושלם" אחרי כל תיקון
+- **אל תכתוב** "Git Command" אחרי כל תיקון קטן
+- **אל תיצור** artifacts של "סיכום התיקונים"
+- **אל תכתוב** paragraphs ארוכים על מה תיקנת
+
+#### ✅ כן תעשה:
+
+- **תתקן** את השגיאות בשקט ויעילות
+- **תענה בקצרה** "תוקן QuickActions.tsx" או "בוצע תיקון"
+- **תחכה** לעדכון הבא ממני
+- **תהיה יעיל** - פחות טקסט, יותר תוצאות
+
+### האותות שלי:
+
+- **"תקין"** = אין שגיאות, אפשר לעבור הלאה
+- **"עוד שגיאות" + קבצים** = תמשיך לתקן
+- **"checkpoint"** = צור checkpoint מלא עם סיכום
+
+### דוגמה נכונה:
+
+```
+אני: [שגיאות TypeScript ב-QuickStats.tsx]
+אתה: "תוקן QuickStats.tsx"
+אני: [עוד שגיאות ב-RecentActivity.tsx]
+אתה: "תוקן RecentActivity.tsx"
+אני: "תקין"
+אתה: עכשיו אפשר לסכם או לעבור הלאה
+```
+
+### 🎯 המטרה:
+
+**לעבוד יעיל יותר, פחות "רעש" ויותר תיקונים מהירים.**
+
+---
+
+### 🔧 TypeScript Fixes - הפטרנים שלמדנו:
+
+1. **Theme Imports**: תמיד `import { colors, spacing } from "@/styles/theme"`
+2. **RTL Styles**: תמיד type casting `as ViewStyle` / `as TextStyle`
+3. **Gradient Colors**: תמיד `as const` עבור readonly tuples
+4. **Hard-coded Colors**: העדף strings כמו `"#ffffff"` על objects
+5. **Routing**: תמיד בדוק שהנתיב קיים בExpo Router
+
+---
+
 ## 🚀 Commit & Checkpoint Guidelines:
 
 ### מתי ליצור Commit:
@@ -260,6 +305,8 @@ git push
 ```
 ````
 
+````
+
 ## 🔄 עבודה עם קוד קיים:
 
 ### תהליך עבודה על מסכים:
@@ -278,19 +325,6 @@ git push
    - לבדוק שהכל עובד ביחד
    - לוודא RTL support מלא
 
-### דוגמה לתהליך:
-
-```
-1. "הנה הקוד הישן של HomeScreen..."
-2. אתה בונה את המסך עם שיפורים
-3. בודקים שיש את כל הקבצים:
-   - screens/home/HomeScreen.tsx
-   - screens/home/components/[כל הקומפוננטות]
-   - screens/home/types.ts (אם צריך)
-   - screens/home/hooks/ (אם יש hooks)
-4. רק אז עוברים למסך הבא
-```
-
 ### חוקים חשובים:
 
 - ❌ **לא מדלגים** - גם אם מסך נראה פשוט, משלימים הכל
@@ -302,86 +336,30 @@ git push
 ## 💻 Code Style Guidelines:
 
 ### שפה:
-
 - **קוד**: אנגלית (משתנים, פונקציות, types)
 - **הערות בקוד**: עברית
 - **UI טקסטים**: עברית
 - **Commit messages**: אנגלית
 
-כשאני שולח שגיאות TypeScript/ESLint:
-❌ אל תעשה:
-
-אל תסכם "הושלם הכל" או "מושלם" אחרי כל תיקון
-אל תכתוב "Git Command" אחרי כל תיקון קטן
-אל תיצור artifacts של "סיכום התיקונים"
-
-✅ כן תעשה:
-
-תתקן את השגיאות בשקט ויעילות
-תענה בקצרה "תוקן" או "בוצע תיקון"
-תחכה לעדכון הבא ממני
-
-האותות שלי:
-
-"תקין" = אין שגיאות, אפשר לעבור הלאה
-"עוד שגיאות" + קבצים = תמשיך לתקן
-"checkpoint" = צור checkpoint מלא
-
-דוגמה נכונה:
-אני: [שגיאות TypeScript]
-אתה: "תוקן ה-QuickStats.tsx"
-אני: [עוד שגיאות]
-אתה: "תוקן ה-RecentActivity.tsx"
-אני: "תקין"
-אתה: עכשיו אפשר לסכם או לעבור הלאה
-🎯 המטרה: לעבוד יעיל יותר, פחות "רעש" ויותר תיקונים מהירים.
-
 ### TypeScript:
-
 - תמיד הגדר types/interfaces
 - העדף interfaces על type aliases
 - אל תשתמש ב-any - השתמש ב-unknown אם חייב
 - תמיד צור Type Guards לבדיקות טיפוסים
 
 ### Imports:
-
 - השתמש ב-@ imports (כמו @/screens, @/lib)
 - סדר: React → React Native → External libs → Local imports
 - קבץ imports לפי קטגוריה עם שורה ריקה ביניהם
 
 ### Naming:
-
 - Components: PascalCase
 - Functions/Variables: camelCase
 - Constants: UPPER_SNAKE_CASE
 - Types/Interfaces: PascalCase עם I prefix לinterfaces
 - Services: camelCase עם Service suffix
 
-### דוגמה:
-
-```typescript
-// ✅ נכון
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-
-import { IUser } from "@/lib/types/user";
-import {
-  unifiedColors,
-  unifiedSpacing,
-} from "@/styles/theme/unifiedDesignSystem";
-import { rtlStyles } from "@/styles/theme/rtl";
-import { useUserStore } from "@/lib/stores/userStore";
-
-// ❌ לא נכון
-import { View } from "react-native";
-import React from "react";
-import { colors } from "../../styles/theme";
-```
-
 ## 📝 File Header Convention:
-
-כל קובץ חייב להתחיל עם Header כזה:
 
 ```typescript
 /**
@@ -400,7 +378,7 @@ import { colors } from "../../styles/theme";
  * @changelog
  * - v1.0.0: Initial creation
  */
-```
+````
 
 ## 🎯 Services & APIs:
 
@@ -438,27 +416,13 @@ try {
 
 ---
 
-🔢 Version: 3.0
-🎯 מטרה: למנוע אי הבנות ולייעל את העבודה
+🔢 **Version: 3.1** (Updated after HomeScreen completion)
+🎯 **מטרה**: למנוע אי הבנות ולייעל את העבודה
 
-## 📝 שינויים מגרסה קודמת (v3.0):
+## 📝 שינויים מגרסה קודמת (v3.1):
 
-- הוספת מערכת העיצוב המאוחדת
-- הוספת RTL support חובה
-- הוספת Services & APIs
-- הוספת Type Guards ו-Patterns
-- עדכון Checkpoint ל-50% במקום 70%
-- הוספת מבנה תיקיות מפורט יותר
-
-```
-
-העדכונים העיקריים שהוספתי:
-
-1. **Theme System** - הדגשה על שימוש ב-unifiedDesignSystem ו-RTL
-2. **Coding Patterns** - כל הפטרנים החשובים שזיהיתי
-3. **Services** - רשימת השירותים הקיימים
-4. **מבנה תיקיות מפורט** - כולל תתי-תיקיות
-5. **דגשים נוספים** - על שימוש נכון בכל המערכות
-
-זה יעזור לי לעבוד יותר טוב ולהימנע מטעויות!
-```
+- **הוספת סגנון עבודה חדש** עם TypeScript/ESLint errors
+- **הוספת פטרנים שנלמדו** מתיקון HomeScreen components
+- **דגש על יעילות** - פחות טקסט, יותר תוצאות
+- **הוספת אותות** להבנה מתי להמשיך ומתי לסכם
+- **הוספת דוגמאות** לאינטראקציה נכונה
