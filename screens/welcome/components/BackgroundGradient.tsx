@@ -17,7 +17,6 @@
  * - v1.0.0: Initial creation with particles and animations
  */
 
-import theme from "@/styles/theme";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { memo, useEffect, useMemo, useRef } from "react";
@@ -30,7 +29,6 @@ import {
   useColorScheme,
 } from "react-native";
 
-const { colors } = theme;
 const { width, height } = Dimensions.get("window");
 
 interface BackgroundGradientProps {
@@ -165,19 +163,9 @@ const BackgroundGradient: React.FC<BackgroundGradientProps> = memo(
     // Dynamic gradient colors based on theme
     const gradientColors = useMemo(() => {
       if (colorScheme === "dark") {
-        return [
-          colors.dark[900],
-          colors.primary[900],
-          colors.secondary[900],
-          colors.dark[800],
-        ];
+        return ["#0a0a0a", "#121212", "#1a1a1a", "#0a0a0a"] as const;
       }
-      return [
-        colors.primary[600],
-        colors.secondary[500],
-        colors.primary[700],
-        colors.dark[800],
-      ];
+      return ["#4c51bf", "#667eea", "#6366f1", "#121212"] as const;
     }, [colorScheme]);
 
     // Gradient animation
@@ -226,11 +214,7 @@ const BackgroundGradient: React.FC<BackgroundGradientProps> = memo(
 
         {/* Secondary overlay gradient */}
         <LinearGradient
-          colors={[
-            "transparent",
-            `${colors.dark[900]}33`,
-            `${colors.dark[900]}66`,
-          ]}
+          colors={["transparent", "#12121233", "#12121266"] as const}
           style={[StyleSheet.absoluteFillObject, { opacity: 0.5 }]}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}

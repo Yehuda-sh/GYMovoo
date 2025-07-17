@@ -17,7 +17,14 @@
  * - v1.0.0: Initial creation with gradients and animations
  */
 
-import theme from "@/styles/theme";
+import {
+  borderRadius,
+  colors,
+  fontSizes,
+  fontWeights,
+  shadows,
+  spacing,
+} from "@/styles/theme";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { memo, useCallback, useRef } from "react";
@@ -31,12 +38,10 @@ import {
   View,
 } from "react-native";
 
-const { colors, spacing, fontSizes, fontWeights, borderRadius, shadows } =
-  theme;
-
 const { height } = Dimensions.get("window");
 const isSmallDevice = height < 700;
 const isTinyDevice = height < 600;
+
 interface ActionButtonsProps {
   buttonsSlide: Animated.Value;
   onLogin: () => void;
@@ -110,7 +115,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = memo(
             accessibilityState={{ disabled }}
           >
             <LinearGradient
-              colors={color.gradients.primary}
+              colors={["#4c51bf", "#667eea"] as const}
               style={[styles.primaryButton, disabled && styles.buttonDisabled]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -141,7 +146,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = memo(
             accessibilityState={{ disabled }}
           >
             <LinearGradient
-              colors={["transparent", "transparent"]}
+              colors={["transparent", "transparent"] as const}
               style={styles.secondaryButtonGradient}
             >
               <Text style={styles.secondaryButtonText}>צור חשבון חדש</Text>

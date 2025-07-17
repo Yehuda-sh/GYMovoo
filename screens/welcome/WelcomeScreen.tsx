@@ -73,7 +73,7 @@ const WelcomeScreen = () => {
 
   // 👆 Dev panel trigger
   const devTapCount = useRef(0);
-  const devTapTimer = useRef<NodeJS.Timeout | null>(null);
+  const devTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleLogoTap = useCallback(() => {
     devTapCount.current += 1;
@@ -84,28 +84,32 @@ const WelcomeScreen = () => {
 
     if (devTapCount.current === 7) {
       setShowDevModal(true);
-      Animated.parallel([
-        Animated.timing(modalOpacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(modalScale, {
-          toValue: 1,
-          tension: 20,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]).start();
       devTapCount.current = 0;
     }
 
     devTapTimer.current = setTimeout(() => {
       devTapCount.current = 0;
-    }, 1000);
+    }, 2000);
+  }, []);
+
+  // 🎨 Modal animations
+  const openDevModal = useCallback(() => {
+    setShowDevModal(true);
+    Animated.parallel([
+      Animated.timing(modalOpacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.spring(modalScale, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [modalOpacity, modalScale]);
 
-  // 🚪 Close dev modal
   const closeDevModal = useCallback(() => {
     Animated.parallel([
       Animated.timing(modalOpacity, {
@@ -123,120 +127,114 @@ const WelcomeScreen = () => {
     });
   }, [modalOpacity, modalScale]);
 
-  // 🔐 Authentication handlers
-  const handleLogin = async () => {
-    try {
-      setLoading(true);
-      router.push("/login");
-    } catch (error) {
-      console.error("Login navigation error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // 🚀 Navigation handlers
+  const handleLogin = useCallback(async () => {
+    router.push("/(auth)/welcome");
+  }, []);
 
-  const handleSignup = async () => {
+  const handleSignup = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      router.push("/signup");
+      // ניווט למסך הרשמה
+      router.push("/(auth)/welcome");
     } catch (error) {
       console.error("Signup navigation error:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // 🎭 Demo user handlers
-  const handleDemoLogin = async (userId: string) => {
+  const handleGuestLogin = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const demoUser = DEMO_USERS.find((u) => u.email === userId);
+      await becomeGuest();
+      // מעבר למסך הבית
+      router.replace("/(tabs)/home");
+    } catch (error) {
+      Alert.alert("שגיאה", "כניסה כאורח נכשלה. נסה שוב.");
+    } finally {
+      setLoading(false);
+    }
+  }, [becomeGuest]);
 
-      if (!demoUser) {
-        throw new Error("Demo user not found");
+  const handleDemoLogin = useCallback(
+    async (userId: string) => {
+      setLoading(true);
+      try {
+        const user = DEMO_USERS.find((u) => u.email === userId);
+        if (user) {
+          await loginAsDemoUser(user);
+          closeDevModal();
+          router.replace("/(tabs)/home");
+        }
+      } catch (error) {
+        Alert.alert("שגיאה", "כניסה כמשתמש דמו נכשלה");
+      } finally {
+        setLoading(false);
       }
+    },
+    [loginAsDemoUser, closeDevModal]
+  );
 
-      // Sign in with demo user
-      await loginAsDemoUser(demoUser);
-
-      // Navigate to home
-      router.replace("/(tabs)/home");
-
-      closeDevModal();
-    } catch (error) {
-      console.error("Demo login error:", error);
-      Alert.alert("שגיאה", "לא ניתן להתחבר למשתמש הדמו");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 🚶 Guest login
-  const handleGuestLogin = async () => {
-    try {
-      setLoading(true);
-
-      // Sign in as guest
-      becomeGuest();
-
-      // Navigate to home
-      router.replace("/(tabs)/home");
-    } catch (error) {
-      console.error("Guest login error:", error);
-      Alert.alert("שגיאה", "לא ניתן להיכנס כאורח");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 🧹 Data reset
-  const handleResetData = async () => {
-    try {
-      setLoading(true);
-      await clearAllData();
-      Alert.alert("הצלחה", "כל הנתונים נמחקו בהצלחה");
-    } catch (error) {
-      console.error("Reset data error:", error);
-      Alert.alert("שגיאה", "לא ניתן למחוק את הנתונים");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleResetData = useCallback(async () => {
+    Alert.alert("איפוס נתונים", "האם אתה בטוח שברצונך לאפס את כל הנתונים?", [
+      { text: "ביטול", style: "cancel" },
+      {
+        text: "איפוס",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await clearAllData();
+            Alert.alert("הצלחה", "כל הנתונים אופסו בהצלחה");
+          } catch (error) {
+            Alert.alert("שגיאה", "איפוס הנתונים נכשל");
+          }
+        },
+      },
+    ]);
+  }, []);
 
   // 🌐 Social login handlers
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
+        options: {
+          redirectTo: "gymoovoo://auth",
+        },
       });
-
       if (error) throw error;
     } catch (error) {
-      console.error("Google login error:", error);
-      Alert.alert("שגיאה", "לא ניתן להתחבר עם Google");
+      Alert.alert("שגיאה", "התחברות עם Google נכשלה");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleFacebookLogin = async () => {
+  const handleAppleLogin = useCallback(async () => {
+    // TODO: Implement Apple login
+    Alert.alert("בקרוב", "התחברות עם Apple תהיה זמינה בקרוב");
+  }, []);
+
+  const handleFacebookLogin = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "facebook",
+        options: {
+          redirectTo: "gymoovoo://auth",
+        },
       });
-
       if (error) throw error;
     } catch (error) {
-      console.error("Facebook login error:", error);
-      Alert.alert("שגיאה", "לא ניתן להתחבר עם Facebook");
+      Alert.alert("שגיאה", "התחברות עם Facebook נכשלה");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Convert demo users for panel
+  // 🎯 Prepare demo users for dev panel
   const demoUsersForPanel = DEMO_USERS.map((user) => ({
     id: user.email,
     name: user.name,
@@ -249,28 +247,41 @@ const WelcomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="transparent"
-        translucent
-      />
+      <StatusBar barStyle="light-content" />
 
-      {/* 🎨 Background */}
+      {/* 🌈 Animated Background */}
       <BackgroundGradient visible={true} />
 
       {/* 🎭 Main Content */}
       <View style={styles.content}>
         {/* 🏠 Hero Section */}
-        <HeroSection fadeAnim={animations.fadeAnim} />
+        <HeroSection
+          fadeAnim={animations.fadeAnim}
+          logoScale={animations.logoScale}
+          titleSlide={animations.titleSlide}
+          subtitleSlide={animations.subtitleSlide}
+        />
 
         {/* 🎯 Action Buttons */}
-        <ActionButtons onLogin={handleLogin} onSignup={handleSignup} />
+        <ActionButtons
+          onLogin={handleLogin}
+          onSignup={handleSignup}
+          buttonsSlide={animations.buttonsSlide}
+          fadeAnim={animations.fadeAnim}
+        />
 
         {/* 🌐 Social Login */}
-        <SocialLoginButtons onGoogleLogin={handleGoogleLogin} />
+        <SocialLoginButtons
+          onGoogleLogin={handleGoogleLogin}
+          onAppleLogin={handleAppleLogin}
+          fadeAnim={animations.fadeAnim}
+        />
 
         {/* 🚶 Guest Button */}
-        <GuestButton onGuestLogin={handleGuestLogin} />
+        <GuestButton
+          onGuestLogin={handleGuestLogin}
+          fadeAnim={animations.fadeAnim}
+        />
       </View>
 
       {/* 🔒 Dev Modal */}

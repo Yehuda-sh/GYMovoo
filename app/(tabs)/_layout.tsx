@@ -1,18 +1,18 @@
-import { colors } from "@/styles/theme/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import React from "react";
 
-export default function TabLayout() {
+export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.primary[600],
-        tabBarInactiveTintColor: colors.text.tertiary,
-        tabBarStyle: {
-          backgroundColor: colors.dark[800],
-          borderTopColor: colors.dark[600],
-        },
         headerShown: false,
+        tabBarStyle: {
+          backgroundColor: "#1a1a1a",
+          borderTopColor: "#333",
+        },
+        tabBarActiveTintColor: "#4c51bf",
+        tabBarInactiveTintColor: "#666",
       }}
     >
       <Tabs.Screen
@@ -29,7 +29,7 @@ export default function TabLayout() {
         options={{
           title: "אימונים",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="fitness" size={size} color={color} />
+            <Ionicons name="barbell" size={size} color={color} />
           ),
         }}
       />
